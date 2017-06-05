@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+require "pathname"
+ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
+libdir = File.join(File.dirname(ENV["BUNDLE_GEMFILE"]), "app")
+$LOAD_PATH.unshift(libdir) unless $LOAD_PATH.include?(libdir)
+
+require "bundler/setup"
+require "dotenv"
+require "val9k"
+
+Dotenv.load
+
+bot = VAL9K.new
+
+bot.run

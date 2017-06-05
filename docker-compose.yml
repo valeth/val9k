@@ -1,0 +1,16 @@
+version: "3" 
+
+services:
+  postgres:
+    image: "postgres:9.5"
+    ports:
+      - "5432:5432"
+  bot:
+    build:
+      context: .
+    volumes:
+      - ".:/app"
+    depends_on:
+      - postgres    
+    environment:
+      file: ".env"

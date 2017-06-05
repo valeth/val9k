@@ -1,0 +1,3 @@
+token:     <%= ENV["DISCORD_TOKEN"] %>
+client_id: <%= ENV["DISCORD_CLIENT_ID"] %>
+prefix:    <%= ENV["DISCORD_PREFIX"] || "!" %>
