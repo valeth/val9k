@@ -32,7 +32,8 @@ module CustomCommand
     list(event.server.id)
   end
 
-  message start_with: "!!" do |event|
+  message do |event|
+    next unless event.content.start_with?(event.bot.prefix * 2)
     cmd = event.content[2..-1]
     next if cmd.empty?
     m = ServerCommand.find_by(name: cmd)
