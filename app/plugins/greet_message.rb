@@ -4,71 +4,69 @@ module GreetMessage
   extend Discordrb::Commands::CommandContainer
   extend Discordrb::EventContainer
 
-  command :greetmsg do |event, *args|
-    greetmsg = args.join(" ")
-    msg = greet_message(event.server.id)
+  options = {
+    required_permissions: %i[manage_server],
+    description: "Control a server's greet message for joining users.",
+    usage: "greetmsg [get | set <text> | toggle | status]"
+  }
+  command :greetmsg, options do |event, *args|
+    sid = event.server.id
 
-    if args.empty?
-      next (msg&.content || "No greetmessage set.")
-    end
+    next get(sid) if args.empty?
 
-    if msg
-      msg.content = greetmsg
-      msg.save
-    else
-      ServerMessage.create do |m|
-        m.sid = event.server.id
-        m.msg_type = "greet_message"
-        m.content  = greetmsg
-      end
-    end
-  end
-
-  command :greetmsg_status, max_args: 0 do |event|
-    status = greet_message_enabled?(event.server.id) ? "enabled" : "disabled"
-    "Greet Message: #{status}"
-  end
-
-  command :greetmsg_toggle, max_args: 0 do |event|
-    greet_message_toggle(event.server.id)
-    if greet_message_enabled?(event.server.id)
-      "Enabled greet messages."
-    else
-      "Disabled greet messages."
+    case args.first
+    when "get"    then get(sid)
+    when "set"    then set(sid, args[1..-1].join(" "))
+    when "toggle" then toggle(sid)
+    when "status" then status(sid)
     end
   end
 
   member_join do |event|
     next unless greet_message_enabled?(event.server.id)
+
     LOGGER.info("#{event.user.name} joined #{event.server.name}")
-    greet_channel = event.server.default_channel
     greetmsg = greet_message(event.server.id)&.content
+
     next unless greetmsg
+
     greetmsg.gsub!("{user}", event.user.name)
     greetmsg.gsub!("{server}", event.server.name)
-    greet_channel.send(greetmsg)
+
+    event.server.default_channel.send(greetmsg)
   end
 
-    module_function
+  module_function
 
-  def greet_message_enabled?(sid)
-    params = { sid: sid, key: "toggle_greetmsg" }
-    query = ServerSetting.find_by(params)
-    if query
-      JSON.parse(query.value)["enabled"]
+  def set(sid, text)
+    msg = greet_message(sid)
+
+    if msg
+      msg.content = text
+      msg.save
     else
-      false
+      ServerMessage.create do |m|
+        m.sid      = sid
+        m.msg_type = "greet_message"
+        m.content  = text
+      end
     end
+
+    "Greet message updated."
   end
 
-  def greet_message(sid)
-    params = { sid: sid, msg_type: "greet_message" }
-    ServerMessage.find_by(params)
+  def get(sid)
+    greet_message(sid)&.content || "No greetmessage set."
   end
 
-  def greet_message_toggle(sid)
-    params = { sid: sid, key: "toggle_greetmsg" }
-    msg = ServerSetting.find_by(params)
+  def status(sid)
+    status = greet_message_enabled?(sid) ? "enabled" : "disabled"
+    "Greet Message: #{status}"
+  end
+
+  def toggle(sid)
+    msg = ServerSetting.find_by(sid: sid, key: "toggle_greetmsg")
+
     if msg
       current = JSON.parse(msg.value)
       current["enabled"] = !current["enabled"]
@@ -76,10 +74,26 @@ module GreetMessage
       msg.save
     else
       ServerSetting.create do |m|
-        m.sid = sid
-        m.key = "toggle_greetmsg"
+        m.sid   = sid
+        m.key   = "toggle_greetmsg"
         m.value = JSON.generate(enabled: true)
       end
     end
+
+    status(sid)
+  end
+
+  def greet_message_enabled?(sid)
+    setting = ServerSetting.find_by(sid: sid, key: "toggle_greetmsg")
+
+    if setting
+      JSON.parse(setting.value)["enabled"]
+    else
+      false
+    end
+  end
+
+  def greet_message(sid)
+    ServerMessage.find_by(sid: sid, msg_type: "greet_message")
   end
 end
