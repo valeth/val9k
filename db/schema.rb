@@ -10,17 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170605204943) do
+ActiveRecord::Schema.define(version: 20170606133754) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
-  create_table "server_commands", force: :cascade do |t|
+  create_table "quotes", force: :cascade do |t|
     t.bigint "sid", null: false
     t.text "name", null: false
     t.text "content", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "created_by", null: false
   end
 
   create_table "server_messages", force: :cascade do |t|
