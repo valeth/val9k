@@ -37,4 +37,12 @@ module Commands
       STATS
     end
   end
+
+  options = {
+    help_available: false,
+    description: "Invite the bot to a server."
+  }
+  command :invite, options do |event|
+    event.bot.invite_url
+  end
 end
