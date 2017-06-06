@@ -33,8 +33,9 @@ class VAL9K < Discordrb::Commands::CommandBot
     plugin_path = File.expand_path("plugins", __dir__)
     Dir["#{plugin_path}/*.rb"].each do |file|
       require file
-      basename = File.basename(file, ".rb")
-      include! basename.classify.constantize
+      plugin = File.basename(file, ".rb").classify
+      LOGGER.info("Adding plugin #{plugin}...")
+      include! plugin.constantize
     end
   end
 end
