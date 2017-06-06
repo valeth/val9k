@@ -6,6 +6,7 @@ require "discordrb"
 
 require "logging"
 require "database"
+require "events"
 
 class VAL9K < Discordrb::Commands::CommandBot
   def initialize
@@ -14,6 +15,8 @@ class VAL9K < Discordrb::Commands::CommandBot
     load_config
 
     super(@config)
+
+    include! Events
 
     load_plugins
   end
