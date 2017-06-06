@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require "erb"
 require "yaml"
 require "active_support/core_ext/hash/keys"
@@ -7,8 +9,11 @@ require "discordrb"
 require "logging"
 require "database"
 require "events"
+require "commands"
 
 class VAL9K < Discordrb::Commands::CommandBot
+  VERSION = "0.2.0"
+
   def initialize
     @config = {}
 
@@ -17,6 +22,7 @@ class VAL9K < Discordrb::Commands::CommandBot
     super(@config)
 
     include! Events
+    include! Commands
 
     load_plugins
   end
