@@ -6,6 +6,7 @@ gem "rake"
 gem "discordrb" # , git: "https://github.com/meew0/discordrb", branch: "master"
 gem "dotenv"
 gem "activesupport"
+gem "nokogiri"
 
 gem "activerecord"
 gem "active_record_migrations"

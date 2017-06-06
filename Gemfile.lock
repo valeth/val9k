@@ -111,6 +111,7 @@ DEPENDENCIES
   activesupport
   discordrb
   dotenv
+  nokogiri
   pg
   pry
   rake
