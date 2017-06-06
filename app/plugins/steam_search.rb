@@ -36,11 +36,12 @@ module SteamSearch
     steam_url = "#{STEAM_BASE_URL}?term=#{CGI.escape(query)}"
     doc = Nokogiri::HTML(open(steam_url))
     doc.css(".search_result_row").map do |elem|
+      date = elem.css(".search_released").text
       OpenStruct.new(
         link: elem["href"],
         image: elem.css(".search_capsule > img").attr("src").text,
         title: elem.css(".search_name > .title").text,
-        release_date: DateTime.parse(elem.css(".search_released").text),
+        release_date: date.empty? ? nil : DateTime.parse(date),
         reviews: elem.css(".search_review_summary").first&.attr("data-store-tooltip"),
         price: elem.css(".search_price").first.text.strip,
         discount: elem.css(".search_discount").first.text.strip
