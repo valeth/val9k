@@ -30,7 +30,8 @@ module GreetMessage
 
     next unless greetmsg
 
-    greetmsg.gsub!("{user}", event.user.name)
+    greetmsg.gsub!("{user_name}", event.user.name)
+    greetmsg.gsub!("{user}", event.user.mention)
     greetmsg.gsub!("{server}", event.server.name)
 
     event.server.default_channel.send(greetmsg)
