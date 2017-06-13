@@ -1,0 +1,10 @@
+image: "ruby:2.4.0"
+
+deploy:
+  type: deploy
+  environment: production
+  script:
+    - gem install dpl
+    - dpl --provider=heroku --app=$HEROKU_APP_NAME --api-key=$HEROKU_API_KEY
+  only:
+    - master
