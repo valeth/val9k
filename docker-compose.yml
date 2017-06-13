@@ -1,16 +1,18 @@
-version: "3" 
+version: "3"
 
 services:
-  postgres:
+  database:
     image: "postgres:9.5"
     ports:
       - "5432:5432"
+
   bot:
     build:
       context: .
     volumes:
       - ".:/app"
     depends_on:
-      - postgres    
+      - "database"
     environment:
-      file: ".env"
+      DATABASE_URL: postgres://postgres@database/fraggers_development
+      DISCORD_ENV:  development
