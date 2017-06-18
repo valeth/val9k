@@ -56,8 +56,10 @@ module Moderator
       (1..depth).reduce([]) do |acc, _i|
         break acc if acc.size >= amount
         tmp = channel.history(50, before_id)
-        before_id = tmp.last.id
+        before_id = tmp.last&.id
         acc += tmp.select { |x| x.author.id == user.id }
+        break acc unless before_id
+        acc
       end
 
     messages.take(amount)
