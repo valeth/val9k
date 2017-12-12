@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 require "active_record_migrations"
+require "dotenv"
+
+Dotenv.load
 
 ActiveRecordMigrations.configure do |config|
   config.yaml_config = "config/database.yml"
