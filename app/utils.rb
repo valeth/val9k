@@ -8,4 +8,9 @@ module Utils
             ```
         MSG
   end
+
+  # String -> Integer|NilClass
+  def parse_channel_mention(mention)
+    /<#(.*)>/.match(mention)&.captures&.first&.to_i
+  end
 end

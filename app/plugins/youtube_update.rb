@@ -2,6 +2,7 @@ require "thread"
 require "json"
 require "redis"
 require "logging"
+require "utils"
 
 Thread.abort_on_exception = true
 REDIS = Redis.new
@@ -9,6 +10,7 @@ REDIS = Redis.new
 module YoutubeUpdate
   extend Discordrb::Commands::CommandContainer
   extend Discordrb::EventContainer
+  extend Utils
 
   EmbedAuthor = Discordrb::Webhooks::EmbedAuthor
   EmbedImage = Discordrb::Webhooks::EmbedImage
@@ -16,16 +18,26 @@ module YoutubeUpdate
   @notifiers = {}
   @mutex = Mutex.new
 
-  command :yt_updates do |event, *args|
+  # TODO: use youtube API to get proper channel name and other info
+  options = {
+    description: "Receive youtube upload notifications.",
+    usage: "yt_updates UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates",
+    required_permissions: %i[manage_webhooks],
+    min_args: 2
+  }
+  command :yt_updates, options do |event, *args|
     server_id = event.server.id
-    update_channel_id = args[2].to_i
+    update_channel_id = parse_channel_mention(args[2])
+    next "Channel mention required as second argument" unless update_channel_id
     yt_id = args[1]
 
     case args.first
     when "add"
       add_channel(update_channel_id, server_id, yt_id)
+      "Added #{args[2]} to update channel list for `#{yt_id}`."
     when "del"
       del_channel(update_channel_id, server_id, yt_id)
+      "Removed #{args[2]} from update channel list for `#{yt_id}`."
     end
   end
 
@@ -101,7 +113,6 @@ module YoutubeUpdate
           data = JSON.parse(message)
           @mutex.synchronize do
             @notifiers.fetch(data["channel"], []).each do |notifier|
-              # TODO: send embed
               chan = bot.channel(notifier)
               notify(chan, data)
             end
