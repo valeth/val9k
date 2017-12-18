@@ -12,6 +12,13 @@ gem "activerecord"
 gem "active_record_migrations"
 gem "pg"
 
+gem "redis", "~> 3.0.1"
+gem "hiredis"
+
+group :webserver do
+  gem "sinatra"
+end
+
 group :development do
   gem "pry"
 end
