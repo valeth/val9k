@@ -10,10 +10,15 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170606133754) do
+ActiveRecord::Schema.define(version: 20180117170028) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "discord_channels", force: :cascade do |t|
+    t.bigint "cid", null: false
+    t.bigint "sid", null: false
+  end
 
   create_table "quotes", force: :cascade do |t|
     t.bigint "sid", null: false
