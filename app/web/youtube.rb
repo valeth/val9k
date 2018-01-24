@@ -16,10 +16,12 @@ def build_hash(xml)
     title:     xml.css("title").text,
     id:        xml.xpath("yt:videoId").text,
     url:       xml.css("link[rel='alternate']").attribute("href").value,
-    author:    xml.css("author > name").text,
-    channel:   xml.xpath("yt:channelId").text,
     published: parse_date(xml.css("published").text),
-    updated:   parse_date(xml.css("updated").text)
+    updated:   parse_date(xml.css("updated").text),
+    channel:   {
+      name: xml.css("author > name").text,
+      id:   xml.xpath("yt:channelId").text,
+    }
   }
 end
 

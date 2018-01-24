@@ -1,4 +1,3 @@
-require "thread"
 require "json"
 require "redis"
 require "logging"
@@ -12,127 +11,133 @@ module YoutubeUpdate
   extend Discordrb::EventContainer
   extend Utils
 
-  EmbedAuthor = Discordrb::Webhooks::EmbedAuthor
-  EmbedImage = Discordrb::Webhooks::EmbedImage
-
-  @notifiers = {}
-  @mutex = Mutex.new
-
-  # TODO: use youtube API to get proper channel name and other info
+  # TODO: use YouTube API to query by channel name
   options = {
     description: "Receive youtube upload notifications.",
     usage: "yt_updates UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates",
-    required_permissions: %i[manage_webhooks],
-    min_args: 2
+    required_permissions: %i[manage_webhooks]
   }
   command :yt_updates, options do |event, *args|
-    server_id = event.server.id
     update_channel_id = parse_channel_mention(args[2])
-    next "Channel mention required as second argument" unless update_channel_id
     yt_id = args[1]
 
     case args.first
     when "add"
-      add_channel(update_channel_id, server_id, yt_id)
+      next "Channel mention required as second argument" unless update_channel_id
+      add_channel(update_channel_id, yt_id)
       "Added #{args[2]} to update channel list for `#{yt_id}`."
     when "del"
-      del_channel(update_channel_id, server_id, yt_id)
+      next "Channel mention required as second argument" unless update_channel_id
+      del_channel(update_channel_id, yt_id)
       "Removed #{args[2]} from update channel list for `#{yt_id}`."
+    when "list"
+      list_channels(event.server.id)
     end
   end
 
   ready do |event|
-    restore_settings
-    subscribe(event.bot)
+    redis_subscribe(event.bot)
   end
 
   module_function
 
-  # (Integer, Integer, String) -> nil
-  def add_channel(cid, sid, yt_channel_id)
-    channels = youtube_update_channels(sid)
-    mappings = JSON.parse(channels.value)
+  # TODO: Use YouTube API to get channel name
 
-    @mutex.synchronize do
-      @notifiers[yt_channel_id] ||= []
-      @notifiers[yt_channel_id] << cid unless @notifiers[yt_channel_id].include?(cid)
-    end
-
-    mappings[yt_channel_id] ||= []
-    mappings[yt_channel_id] << cid unless mappings.include?(cid)
-    channels.value = JSON.generate(mappings)
-    channels.save
-  end
-
-  # (Integer, Integer, String) -> nil
-  def del_channel(cid, sid, yt_channel_id)
-    channels = youtube_update_channels(sid)
-    mappings = JSON.parse(channels.value)
-
-    @mutex.synchronize do
-      @notifiers[yt_channel_id].delete(cid)
-    end
-
-    mappings[yt_channel_id].delete(cid)
-    channels.value = JSON.generate(mappings)
-    channels.save
-  end
-
-  def youtube_update_channels(sid)
-    channels = ServerSetting.find_by(sid: sid, key: "youtube_update_channels")
-    return channels if channels
-    ServerSetting.create do |m|
-      m.sid = sid
-      m.key = "youtube_update_channels"
-      m.value = JSON.generate({})
+  # @param cid [Integer]
+  # @param yt_channel_id [String]
+  # @return [YoutubeNotificationSubscription]
+  def add_channel(cid, yt_channel_id)
+    YoutubeNotificationSubscription.create do |m|
+      m.youtube_channel = youtube_channel(yt_channel_id)
+      m.discord_channel = DiscordChannel.find_by(cid: cid)
     end
   end
 
-  def restore_settings
-    LOGGER.info { "Restoring youtube notification settings" }
-    server_settings = ServerSetting.where(key: "youtube_update_channels")
-    notifiers = {}
+  # @param cid [Integer]
+  # @param yt_channel_id [String]
+  def del_channel(cid, yt_channel_id)
+    subscription = YoutubeNotificationSubscription.find_by(
+      discord_channel_id: cid,
+      youtube_channel_id: yt_channel_id
+    )
+    return unless subscription
 
-    server_settings.each do |server_setting|
-      mappings = JSON.parse(server_setting.value)
-      mappings.each do |yt_channel_id, channels|
-        notifiers[yt_channel_id] ||= []
-        notifiers[yt_channel_id] |= channels
-      end
-    end
-
-    @mutex.synchronize { @notifiers = notifiers }
+    subscription.destroy
   end
 
-  def subscribe(bot)
+  def list_channels(sid)
+    subs = YoutubeNotificationSubscription
+      .joins(:discord_channel)
+      .where("discord_channels.sid" => sid)
+
+    code_block(subs.map { |x| x.discord_channel.cid.to_s }.join("\n"))
+  end
+
+  # @param bot [Discordrb::Bot]
+  def redis_subscribe(bot)
     Thread.new do
-      LOGGER.info { "Starting redis subscriber..." }
+      LOGGER.info { "Starting Redis YouTube subscriber listener..." }
 
       REDIS.subscribe("youtube_updates") do |on|
         on.message do |channel, message|
-          data = JSON.parse(message)
-          @mutex.synchronize do
-            @notifiers.fetch(data["channel"], []).each do |notifier|
-              chan = bot.channel(notifier)
-              notify(chan, data)
-            end
-          end
+          notify_all(bot, JSON.parse(message))
         end
       end
     end
   end
 
-  def notify(channel, json)
-    channel.send_embed do |embed|
-      embed.title = json["title"]
-      embed.url = json["url"]
-      embed.author = EmbedAuthor.new(
-        name: json["author"],
-        url: "https://youtube.com/channel/#{json['channel']}"
-      )
-      embed.image = EmbedImage.new(url: "https://img.youtube.com/vi/#{json['id']}/maxresdefault.jpg")
-      embed.timestamp = DateTime.parse(json["published"])
-      embed.color = 0xfc0c00
+  # @param bot [Discordrb::Bot]
+  # @param message [Hash]
+  def notify_all(bot, message)
+    channel = youtube_channel(message["channel"]["id"], message["channel"]["name"])
+    subscriptions = channel.youtube_notification_subscriptions
+
+    subscriptions.each do |sub|
+      discord_channel = bot.channel(sub.discord_channel_id)
+      notif = notification(sub, channel, message)
+      next if sub.notified?(notif)
+      notify(discord_channel, notif)
+      sub.youtube_notifications << notif
+      sub.save
     end
+  end
+
+  # @param channel [Discordrb::Channel]
+  # @param notification [YoutubeNotification]
+  # @return [Discordrb::Message]
+  def notify(channel, notification)
+    channel.send_embed("", notification.to_embed)
+  end
+
+  # @param subscription [YoutubeNotificationSubscription]
+  # @param channel [YoutubeChannel]
+  # @param messge [Hash]
+  # @return [YoutubeNotification]
+  def notification(subscription, channel, message)
+    notif = YoutubeNotification.find_by(video_id: message["id"])
+    return notif if notif
+
+    YoutubeNotification.create do |m|
+      m.video_id        = message["id"]
+      m.title           = message["title"]
+      m.published_at    = message["published"]
+      m.updated_at      = message["updated"]
+      m.youtube_channel = channel
+    end
+  end
+
+  # @param id [String]
+  # @param name [String]
+  # @return [YoutubeChannel]
+  def youtube_channel(id, name = "")
+    chan = YoutubeChannel.find_by(channel_id: id)
+
+    if !chan
+      chan = YoutubeChannel.create(channel_id: id, name: name)
+    elsif !name.empty? && chan&.name != name
+      chan.update(name: name)
+    end
+
+    chan
   end
 end

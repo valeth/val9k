@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180117170028) do
+ActiveRecord::Schema.define(version: 20180117170055) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -41,6 +41,34 @@ ActiveRecord::Schema.define(version: 20180117170028) do
     t.bigint "sid", null: false
     t.text "key", null: false
     t.json "value", null: false
+  end
+
+  create_table "youtube_channels", force: :cascade do |t|
+    t.text "channel_id", null: false
+    t.text "name"
+  end
+
+  create_table "youtube_notification_subscriptions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "youtube_channel_id", null: false
+    t.bigint "discord_channel_id", null: false
+    t.index ["discord_channel_id"], name: "index_youtube_notification_subscriptions_on_discord_channel_id"
+    t.index ["youtube_channel_id"], name: "index_youtube_notification_subscriptions_on_youtube_channel_id"
+  end
+
+  create_table "youtube_notification_subscriptions_notifications", id: false, force: :cascade do |t|
+    t.bigint "youtube_notification_id"
+    t.bigint "youtube_notification_subscription_id"
+  end
+
+  create_table "youtube_notifications", force: :cascade do |t|
+    t.text "video_id", null: false
+    t.text "title", null: false
+    t.datetime "published_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "youtube_channel_id", null: false
+    t.index ["youtube_channel_id"], name: "index_youtube_notifications_on_youtube_channel_id"
   end
 
 end
