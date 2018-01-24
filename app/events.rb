@@ -23,6 +23,14 @@ module Events
     update_channel_database(event.bot, action: :delete)
   end
 
+  server_create do |event|
+    update_channel_database(event.bot, action: :create)
+  end
+
+  server_delete do |event|
+    update_channel_database(event.bot, action: :delete)
+  end
+
   module_function
 
   # TODO: optimize this
