@@ -31,7 +31,7 @@ module SteamSearch
     end
   end
 
-  module_function
+module_function
 
   def search(query)
     steam_url = "#{STEAM_BASE_URL}?term=#{CGI.escape(query)}"

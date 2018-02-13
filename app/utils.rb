@@ -1,12 +1,8 @@
 module Utils
-  def code_block(text, syntax: nil)
+  def code_block(text = nil, syntax: nil)
     text = yield if block_given?
-
-    <<~MSG
-            ```#{syntax}
-            #{text}
-            ```
-        MSG
+    return if text.nil?
+    "```#{syntax}\n#{text}\n```"
   end
 
   # String -> Integer|NilClass

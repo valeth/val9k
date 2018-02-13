@@ -37,7 +37,7 @@ module Selfrole
     end
   end
 
-  module_function
+module_function
 
   def toggle(server, user, rname)
     sid = server.id

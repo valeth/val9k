@@ -37,7 +37,7 @@ module GreetMessage
     event.server.default_channel.send(greetmsg)
   end
 
-  module_function
+module_function
 
   def set(sid, text)
     msg = greet_message(sid)

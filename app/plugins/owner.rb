@@ -2,6 +2,7 @@ require "open-uri"
 
 module Owner
   extend Discordrb::Commands::CommandContainer
+  extend Utils
 
   options = {
     help_available: false,
@@ -10,7 +11,11 @@ module Owner
   command :eval, options do |event, *code|
     next unless bot_owner?(event)
 
-    eval(code.join(" "))
+    begin
+      code_block(syntax: :ruby) { eval(code.join(" ")) }
+    rescue SyntaxError => e
+      code_block { e }
+    end
   end
 
   options = {
@@ -50,7 +55,7 @@ module Owner
     end
   end
 
-  module_function
+module_function
 
   def bot_owner?(event)
     user = event.author

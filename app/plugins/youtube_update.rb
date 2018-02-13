@@ -79,7 +79,12 @@ module YoutubeUpdate
       .joins(:discord_channel)
       .where("discord_channels.sid" => sid)
 
-    code_block(subs.map { |x| x.discord_channel.cid.to_s }.join("\n"))
+    code_block do
+      tmp = subs.map do |x|
+        "#{x.youtube_channel.name} => #{x.discord_channel.cid}"
+      end
+      tmp.join("\n")
+    end
   end
 
   # @param bot [Discordrb::Bot]

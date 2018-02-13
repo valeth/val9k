@@ -27,7 +27,7 @@ class VAL9K < Discordrb::Commands::CommandBot
     load_plugins
   end
 
-    private
+private
 
   def load_config
     config_file = File.expand_path("../config/discord.yml", __dir__)

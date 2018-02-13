@@ -33,7 +33,7 @@ module UserQuote
     event.channel.send(qtext || "Quote not found.")
   end
 
-  module_function
+module_function
 
   def list(event)
     sid = event.server.id
@@ -42,7 +42,7 @@ module UserQuote
     if quotes.empty?
       "No quotes on this server"
     else
-      code_block(nil, syntax: :ruby) do
+      code_block(syntax: :ruby) do
         msg = quotes.map do |x|
           user = event.bot.user(x.created_by) || "Unknown User"
           %(:#{x.name} by "#{user.distinct}")
@@ -56,11 +56,11 @@ module UserQuote
   def add(sid, author, qname, qtext)
     begin
       Quote.create! do |m|
-          m.name       = qname
-          m.content    = qtext
-          m.sid        = sid
-          m.created_by = author
-        end
+        m.name       = qname
+        m.content    = qtext
+        m.sid        = sid
+        m.created_by = author
+      end
       "Added quote #{qname}."
     rescue ActiveRecord::RecordInvalid => e
       "Failed to add quote #{qname}: #{e}"

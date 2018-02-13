@@ -28,7 +28,7 @@ module Moderator
     chan.send_temporary_message(msg, 5)
   end
 
-  module_function
+module_function
 
   def prune_target(event)
     if event.message.mentions.empty?
