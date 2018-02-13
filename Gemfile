@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-ruby "2.4.1"
+ruby "~> 2.4"
 
 gem "rake"
 gem "discordrb" # , git: "https://github.com/meew0/discordrb", branch: "master"
@@ -14,6 +14,7 @@ gem "pg"
 
 gem "redis", "~> 3.0.1"
 gem "hiredis"
+gem "timers", "~> 4"
 
 group :webserver do
   gem "sinatra"

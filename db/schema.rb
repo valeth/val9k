@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180117170055) do
+ActiveRecord::Schema.define(version: 20180124232011) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -46,6 +46,9 @@ ActiveRecord::Schema.define(version: 20180117170055) do
   create_table "youtube_channels", force: :cascade do |t|
     t.text "channel_id", null: false
     t.text "name"
+    t.datetime "next_update", default: "2018-02-13 16:43:16", null: false
+    t.datetime "created_at", default: "2018-02-13 16:43:16", null: false
+    t.datetime "updated_at", default: "2018-02-13 16:43:16", null: false
   end
 
   create_table "youtube_notification_subscriptions", force: :cascade do |t|

@@ -2,6 +2,7 @@ require "json"
 require "redis"
 require "logging"
 require "utils"
+require "websub"
 
 Thread.abort_on_exception = true
 REDIS = Redis.new
@@ -36,7 +37,8 @@ module YoutubeUpdate
   end
 
   ready do |event|
-    redis_subscribe(event.bot)
+    start_redis_subscriber(event.bot)
+    start_subscription_scheduler
   end
 
   module_function
@@ -74,7 +76,7 @@ module YoutubeUpdate
   end
 
   # @param bot [Discordrb::Bot]
-  def redis_subscribe(bot)
+  def start_redis_subscriber(bot)
     Thread.new do
       LOGGER.info { "Starting Redis YouTube subscriber listener..." }
 
@@ -82,6 +84,16 @@ module YoutubeUpdate
         on.message do |channel, message|
           notify_all(bot, JSON.parse(message))
         end
+      end
+    end
+  end
+
+  def start_subscription_scheduler
+    Thread.new do
+      LOGGER.info { "Starting YouTube subscription scheduler..." }
+
+      YoutubeChannel.all.each do |chan|
+        YoutubeSubscriptionScheduler.schedule(chan)
       end
     end
   end
@@ -134,6 +146,7 @@ module YoutubeUpdate
 
     if !chan
       chan = YoutubeChannel.create(channel_id: id, name: name)
+      YoutubeSubscriptionScheduler.schedule(id)
     elsif !name.empty? && chan&.name != name
       chan.update(name: name)
     end
