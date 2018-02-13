@@ -10,18 +10,25 @@ module Database
   MODEL_PATH = File.expand_path("models", __dir__)
   CONFIG_FILE = File.expand_path("../config/database.yml", __dir__)
 
-  env = ENV["DISCORD_ENV"] || "development"
+  ActiveRecord::Base.configurations = YAML.load(ERB.new(open(CONFIG_FILE).read).result)
 
-  LOGGER.info("Database environment set to #{env}")
+module_function
 
-  erb = ERB.new(open(CONFIG_FILE).read).result
-  db_config = YAML.load(erb)
+  def connect
+    env = ENV["DISCORD_ENV"]&.to_sym || :development
+    LOGGER.info { "Database environment set to #{env}" }
 
-  ActiveRecord::Base.establish_connection(db_config[env])
-  LOGGER.info("Connected to database")
+    db = ActiveRecord::Base.establish_connection(env)
+    LOGGER.info { "Connected to database" }
 
-  Dir["#{MODEL_PATH}/*.rb"].each do |file|
-    require file
-    LOGGER.info("Loaded database model: #{File.basename(file, '.rb')}")
+    load_models
+    db
+  end
+
+  def load_models
+    Dir["#{MODEL_PATH}/*.rb"].each do |file|
+      require file
+      LOGGER.info("Loaded database model: #{File.basename(file, '.rb')}")
+    end
   end
 end

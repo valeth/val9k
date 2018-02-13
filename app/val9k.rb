@@ -4,6 +4,7 @@ require "erb"
 require "yaml"
 require "active_support/core_ext/hash/keys"
 require "active_support/core_ext/string/inflections"
+require "redis"
 require "discordrb"
 
 require "logging"
@@ -14,12 +15,19 @@ require "commands"
 class VAL9K < Discordrb::Commands::CommandBot
   VERSION = "0.2.0"
 
+  attr_reader :database
+  attr_reader :redis
+
   def initialize
     @config = {}
+    @database = nil
+    @redis = nil
 
     load_config
 
     super(@config)
+    initialize_database
+    initialize_redis
 
     include! Events
     include! Commands
@@ -43,5 +51,13 @@ private
       LOGGER.info("Adding plugin #{plugin}...")
       include! plugin.constantize
     end
+  end
+
+  def initialize_database
+    @database = Database.connect
+  end
+
+  def initialize_redis
+    @redis = Redis.new
   end
 end

@@ -1,11 +1,7 @@
 require "json"
-require "redis"
 require "logging"
 require "utils"
 require "websub"
-
-Thread.abort_on_exception = true
-REDIS = Redis.new
 
 module YoutubeUpdate
   extend Discordrb::Commands::CommandContainer
@@ -92,7 +88,7 @@ module YoutubeUpdate
     Thread.new do
       LOGGER.info { "Starting Redis YouTube subscriber listener..." }
 
-      REDIS.subscribe("youtube_updates") do |on|
+      bot.redis.subscribe("youtube_updates") do |on|
         on.message do |channel, message|
           notify_all(bot, JSON.parse(message))
         end
