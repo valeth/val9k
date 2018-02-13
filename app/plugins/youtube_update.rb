@@ -144,7 +144,7 @@ module YoutubeUpdate
 
     if !chan
       chan = YoutubeChannel.create(channel_id: id, name: name)
-      YoutubeSubscriptionScheduler.schedule(id)
+      YoutubeSubscriptionScheduler.schedule(chan)
     elsif !name.empty? && chan&.name != name
       chan.update(name: name)
     end
