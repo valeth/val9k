@@ -1,1 +1,6 @@
 /.env
+
+# Ignore those files in production
+/.bundle/
+/start.sh
+/vendor/
