@@ -74,6 +74,8 @@ module_function
       loop { @timers.wait }
     end
 
+    th.name = "SubscriptionUpdater: #{chan.id}"
+
     @scheduled.update(chan.channel_id => th)
   end
 

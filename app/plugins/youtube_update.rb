@@ -38,7 +38,14 @@ module YoutubeUpdate
 
   ready do |event|
     start_redis_subscriber(event.bot)
-    start_subscription_scheduler
+  end
+
+  Thread.new do
+    LOGGER.info { "Starting YouTube subscription scheduler..." }
+
+    YoutubeChannel.all.each do |chan|
+      YoutubeSubscriptionScheduler.schedule(chan)
+    end
   end
 
   module_function
@@ -84,16 +91,6 @@ module YoutubeUpdate
         on.message do |channel, message|
           notify_all(bot, JSON.parse(message))
         end
-      end
-    end
-  end
-
-  def start_subscription_scheduler
-    Thread.new do
-      LOGGER.info { "Starting YouTube subscription scheduler..." }
-
-      YoutubeChannel.all.each do |chan|
-        YoutubeSubscriptionScheduler.schedule(chan)
       end
     end
   end
