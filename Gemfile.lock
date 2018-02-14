@@ -54,6 +54,10 @@ GEM
       domain_name (~> 0.5)
     i18n (0.9.1)
       concurrent-ruby (~> 1.0)
+    little-plugger (1.1.4)
+    logging (2.2.2)
+      little-plugger (~> 1.1)
+      multi_json (~> 1.10)
     loofah (2.1.1)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
@@ -63,6 +67,7 @@ GEM
     mime-types-data (3.2016.0521)
     mini_portile2 (2.3.0)
     minitest (5.10.3)
+    multi_json (1.13.1)
     mustermann (1.0.1)
     netrc (0.11.0)
     nokogiri (1.8.1)
@@ -127,6 +132,7 @@ DEPENDENCIES
   discordrb
   dotenv
   hiredis
+  logging (~> 2)
   nokogiri
   pg
   pry

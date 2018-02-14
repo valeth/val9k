@@ -7,7 +7,7 @@ require "active_support/core_ext/string/inflections"
 require "redis"
 require "discordrb"
 
-require "logging"
+require_relative "application_logger"
 require "database"
 require "events"
 require "commands"
@@ -48,7 +48,7 @@ private
     Dir["#{plugin_path}/*.rb"].each do |file|
       require file
       plugin = File.basename(file, ".rb").classify
-      LOGGER.info("Adding plugin #{plugin}...")
+      LOGGER.info { "Adding plugin #{plugin}..." }
       include! plugin.constantize
     end
   end

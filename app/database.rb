@@ -3,8 +3,7 @@
 require "erb"
 require "yaml"
 require "active_record"
-
-require_relative "logging"
+require_relative "application_logger"
 
 module Database
   MODEL_PATH = File.expand_path("models", __dir__)
@@ -28,7 +27,7 @@ module_function
   def load_models
     Dir["#{MODEL_PATH}/*.rb"].each do |file|
       require file
-      LOGGER.info("Loaded database model: #{File.basename(file, '.rb')}")
+      LOGGER.info { "Loaded database model: #{File.basename(file, '.rb')}" }
     end
   end
 end

@@ -1,4 +1,4 @@
-require "logging"
+require "application_logger"
 
 module Moderator
   extend Discordrb::Commands::CommandContainer
@@ -24,7 +24,7 @@ module Moderator
         "#{event.author.name} deleted #{amount} messages of #{user.name} from #{event.channel.mention}"
       end
 
-    LOGGER.info(msg)
+    LOGGER.info { msg }
     chan.send_temporary_message(msg, 5)
   end
 

@@ -1,15 +1,15 @@
 # Core event handlers
 
-require "logging"
+require_relative "application_logger"
 
 module Events
   extend Discordrb::EventContainer
 
   ready do |event|
     bot = event.bot
-    LOGGER.info("Logged in as #{bot.profile.name}")
+    LOGGER.info { "Logged in as #{bot.profile.name}" }
     game = "#{bot.prefix}help"
-    LOGGER.info("Setting game to #{game}")
+    LOGGER.info { "Setting game to #{game}" }
     bot.game = game
 
     update_channel_database(event.bot)
@@ -61,7 +61,6 @@ module Events
 
   def cleanup_channel_database(channels_local, channels_remote)
     only_local = channels_local - channels_remote
-    # LOGGER.info("Only Local: #{only_local.size}")
 
     DiscordChannel.transaction do
       only_local.each do |sid, cid|
@@ -72,7 +71,6 @@ module Events
 
   def fill_channel_database(channels_local, channels_remote)
     only_remote = channels_remote - channels_local
-    # LOGGER.info("Only Remote: #{only_remote.size}")
 
     DiscordChannel.transaction do
       only_remote.each do |sid, cid|

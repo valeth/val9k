@@ -1,7 +1,7 @@
 require "json"
-require "logging"
 require "utils"
 require "websub"
+require "application_logger"
 
 module YoutubeUpdate
   extend Discordrb::Commands::CommandContainer

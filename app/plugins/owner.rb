@@ -64,7 +64,7 @@ module_function
     if user.id == 217078934976724992
       true
     else
-      LOGGER.warn("User #{user.distinct} (#{user.id}) tried to use `#{cmd}`.")
+      LOGGER.warn { "User #{user.distinct} (#{user.id}) tried to use `#{cmd}`." }
       false
     end
   end

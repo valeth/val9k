@@ -4,7 +4,7 @@ require "ostruct"
 require "cgi"
 require "open-uri"
 require "nokogiri"
-require "logging"
+require "application_logger"
 
 module SteamSearch
   extend Discordrb::Commands::CommandContainer

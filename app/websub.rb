@@ -3,7 +3,7 @@
 require "json"
 require "rest-client"
 require "timers"
-require "logging"
+require_relative "application_logger"
 
 class WebSub
   def initialize(hub_url)
@@ -47,7 +47,7 @@ module YoutubeSubscriptionScheduler
 module_function
 
   def subscribe(chan)
-    LOGGER.info("Updating subscription for channel #{chan.name} (#{chan.channel_id})...")
+    LOGGER.info { "Updating subscription for channel #{chan.name} (#{chan.channel_id})..." }
 
     response = @hub.subscribe(
       topic:    "https://www.youtube.com/xml/feeds/videos.xml?channel_id=#{chan.channel_id}",

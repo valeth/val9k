@@ -1,7 +1,7 @@
 # Core commands
 
-require "logging"
 require "utils"
+require_relative "application_logger"
 
 module Commands
   extend Discordrb::Commands::CommandContainer

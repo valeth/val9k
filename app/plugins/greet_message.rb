@@ -25,7 +25,7 @@ module GreetMessage
   member_join do |event|
     next unless greet_message_enabled?(event.server.id)
 
-    LOGGER.info("#{event.user.name} joined #{event.server.name}")
+    LOGGER.info { "#{event.user.name} joined #{event.server.name}" }
     greetmsg = greet_message(event.server.id)&.content
 
     next unless greetmsg
