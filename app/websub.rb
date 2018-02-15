@@ -2,7 +2,7 @@
 
 require "json"
 require "rest-client"
-require "timers"
+require "rufus-scheduler"
 require_relative "application_logger"
 
 class WebSub
@@ -40,9 +40,9 @@ private
 end
 
 module YoutubeSubscriptionScheduler
-  @scheduled = {}
-  @timers = Timers::Group.new
+  INTERVAL = 2.days.freeze
   @hub = WebSub.new("https://pubsubhubbub.appspot.com").freeze
+  @scheduler = Rufus::Scheduler.new
 
 module_function
 
@@ -55,40 +55,36 @@ module_function
     )
 
     if response.code == 204
-      chan.next_update = DateTime.now.advance(days: 2)
+      chan.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
       chan.save
       LOGGER.info("Updated, next update: #{chan.next_update}")
     end
   end
 
-  def schedule(chan, interval: 2.days)
+  def schedule(chan)
     return if scheduled?(chan)
 
-    LOGGER.info { "Scheduling #{chan.name} (#{chan.channel_id}) for resubscription in #{interval.inspect}..." }
+    LOGGER.info { "Scheduling #{chan.name} (#{chan.channel_id}) for resubscription in #{INTERVAL.inspect}..." }
 
-    th = Thread.new do
-      subscribe(chan) if DateTime.now >= chan.next_update
+    Thread.new do
+      subscribe(chan) if chan.next_update.nil? || DateTime.now >= chan.next_update
 
-      @timers.every(interval.to_i) { subscribe(chan) }
-
-      loop { @timers.wait }
+      @scheduler.every("#{INTERVAL.to_i}s", first_at: chan.next_update, tag: chan.channel_id) do
+        subscribe(chan)
+      end
     end
-
-    th.name = "SubscriptionUpdater: #{chan.id}"
-
-    @scheduled.update(chan.channel_id => th)
   end
 
   def unschedule(chan)
     return unless scheduled?(chan)
 
     LOGGER.info { "Unscheduling #{chan.name} (#{chan.channel_id}) from resubscription..." }
-
-    @scheduled[chan.channel_id].exit
-    @scheduled.delete(chan.channel_id)
+    job, _ = @scheduler.jobs(tag: chan.channel_id)
+    @schedulers.unscheduler(job) if job
   end
 
   def scheduled?(chan)
-    @scheduled.key?(chan.channel_id)
+    job, _ = @scheduler.jobs(tag: chan.channel_id)
+    job.nil? ? false : @scheduler.scheduled?(job)
   end
 end
