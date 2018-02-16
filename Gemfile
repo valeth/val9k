@@ -16,6 +16,7 @@ gem "pg"
 gem "redis", "~> 3.0.1"
 gem "hiredis"
 gem "rufus-scheduler", "~> 3.4"
+gem "google-api-client", "~> 0.11"
 
 group :webserver do
   gem "sinatra"

@@ -2,11 +2,17 @@ require "json"
 require "utils"
 require "websub"
 require "application_logger"
+require "google/apis/youtube_v3"
+
+# Thread.abort_on_exception = true
 
 module YoutubeUpdate
   extend Discordrb::Commands::CommandContainer
   extend Discordrb::EventContainer
   extend Utils
+
+  YOUTUBE = Google::Apis::YoutubeV3::YouTubeService.new
+  YOUTUBE.key = ENV.fetch("YOUTUBE_API_KEY")
 
   # TODO: use YouTube API to query by channel name
   options = {
@@ -39,21 +45,21 @@ module YoutubeUpdate
   Thread.new do
     LOGGER.info { "Starting YouTube subscription scheduler..." }
 
-    YoutubeChannel.all.each do |chan|
+    youtube_channels do |chan|
       YoutubeSubscriptionScheduler.schedule(chan)
     end
   end
 
   module_function
 
-  # TODO: Use YouTube API to get channel name
-
   # @param cid [Integer]
   # @param yt_channel_id [String]
   # @return [YoutubeNotificationSubscription]
   def add_channel(cid, yt_channel_id)
+    chan = youtube_channel(yt_channel_id)
+    YoutubeSubscriptionScheduler.schedule(chan)
     YoutubeNotificationSubscription.create do |m|
-      m.youtube_channel = youtube_channel(yt_channel_id)
+      m.youtube_channel = chan
       m.discord_channel = DiscordChannel.find_by(cid: cid)
     end
   end
@@ -70,6 +76,7 @@ module YoutubeUpdate
     subscription.destroy
   end
 
+  # @param sid [Integer]
   def list_channels(sid)
     subs = YoutubeNotificationSubscription
       .joins(:discord_channel)
@@ -136,19 +143,33 @@ module YoutubeUpdate
     end
   end
 
+  def youtube_channels
+    YoutubeChannel.all.each do |chan|
+      chan.update(name: fetch_channel_title(chan.channel_id)) if chan.name&.empty?
+      yield(chan)
+    end
+  end
+
   # @param id [String]
   # @param name [String]
   # @return [YoutubeChannel]
-  def youtube_channel(id, name = "")
-    chan = YoutubeChannel.find_by(channel_id: id)
-
-    if !chan
-      chan = YoutubeChannel.create(channel_id: id, name: name)
-      YoutubeSubscriptionScheduler.schedule(chan)
-    elsif !name.empty? && chan&.name != name
-      chan.update(name: name)
+  def youtube_channel(id, name = nil)
+    chan = YoutubeChannel.find_or_create_by(channel_id: id) do |m|
+      m.name = name || fetch_channel_title(id)
     end
 
+    chan.update(name: fetch_channel_title(id)) if chan.name&.empty?
     chan
+  end
+
+  # @param channel_id [String]
+  # @return [String]
+  def fetch_channel_title(channel_id)
+    LOGGER.info { "Fetching channel name for #{channel_id}" }
+    results = YOUTUBE.list_searches("snippet", type: "channel", channel_id: channel_id)
+    results.items.first&.snippet&.title
+  rescue Google::Apis::Error => e
+    LOGGER.error { "Failed to fetch YouTube channel name: #{e}" }
+    ""
   end
 end
