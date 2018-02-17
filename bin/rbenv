@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+unset CDPATH
+
+if test -z "$RBENV_ROOT"; then
+  echo "RBENV_ROOT not set, aborting..."
+  exit 2
+fi
+
+export RBENV_ROOT
+export PATH="$RBENV_ROOT/bin:$PATH"
+eval "$(rbenv init -)"
+
+cd "$(dirname $0)/../"
+exec "$@"
