@@ -3,18 +3,23 @@ require "utils"
 require "websub"
 require "application_logger"
 require "google/apis/youtube_v3"
+require "discordrb"
 
-# Thread.abort_on_exception = true
+Thread.abort_on_exception = (ENV["DISCORD_ENV"] == "development")
 
 module YoutubeUpdate
   extend Discordrb::Commands::CommandContainer
   extend Discordrb::EventContainer
   extend Utils
 
-  YOUTUBE = Google::Apis::YoutubeV3::YouTubeService.new
+  DiscordEmbed = Discordrb::Webhooks::Embed
+  DiscordEmbedAuthor = Discordrb::Webhooks::EmbedAuthor
+  DiscordEmbedImage = Discordrb::Webhooks::EmbedImage
+  YouTube = Google::Apis::YoutubeV3
+
+  YOUTUBE = YouTube::YouTubeService.new
   YOUTUBE.key = ENV.fetch("YOUTUBE_API_KEY")
 
-  # TODO: use YouTube API to query by channel name
   options = {
     description: "Receive youtube upload notifications.",
     usage: "yt_updates UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates",
@@ -123,7 +128,7 @@ module YoutubeUpdate
   # @param notification [YoutubeNotification]
   # @return [Discordrb::Message]
   def notify(channel, notification)
-    channel.send_embed("", notification.to_embed)
+    channel.send_embed("", embed(notification))
   end
 
   # @param subscription [YoutubeNotificationSubscription]
@@ -171,5 +176,51 @@ module YoutubeUpdate
   rescue Google::Apis::Error => e
     LOGGER.error { "Failed to fetch YouTube channel name: #{e}" }
     ""
+  end
+
+  # Get thumbnails with highest possible resolution
+  # @param [Youtube::ThumbnailDetails]
+  # @return [String, nil]
+  def youtube_thumbnail(thumbs)
+    (thumbs.maxres || thumbs.standard || thumbs.high || thumbs.medium || thumbs.default)&.url
+  end
+
+  # @param video_id [String]
+  # @return [Hash]
+  def fetch_video_info(video_id)
+    LOGGER.info { "Fetching video info for #{video_id}" }
+    results = YOUTUBE.list_videos("snippet", id: video_id)
+    snippet = results.items.first&.snippet
+    return unless snippet
+    {
+      thumbnail_url: youtube_thumbnail(snippet.thumbnails),
+      description:   snippet.description,
+      title:         snippet.title
+    }
+  rescue Google::Apis::Error => e
+    LOGGER.error { "Failed to fetch YouTube video info: #{e}" }
+    {}
+  end
+
+  # Build a Discord embed from a notification.
+  # @param notif [YoutubeNotification]
+  # @return [DiscordEmbed]
+  def embed(notif)
+    video_info = fetch_video_info(notif.video_id)
+
+    DiscordEmbed.new(
+      title: video_info[:title] || notif.title,
+      # description: video_info[:description],
+      url: notif.url,
+      author: DiscordEmbedAuthor.new(
+        name: notif.youtube_channel.name,
+        url:  notif.youtube_channel.url
+      ),
+      image: DiscordEmbedImage.new(
+        url: video_info[:thumbnail_url] || notif.thumbnail_url
+      ),
+      timestamp: notif.published_at,
+      color: 0xfc0c00
+    )
   end
 end
