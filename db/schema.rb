@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180215214353) do
+ActiveRecord::Schema.define(version: 20180218120836) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -71,6 +71,8 @@ ActiveRecord::Schema.define(version: 20180215214353) do
     t.datetime "published_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "youtube_channel_id", null: false
+    t.text "thumbnail_url"
+    t.text "description"
     t.index ["youtube_channel_id"], name: "index_youtube_notifications_on_youtube_channel_id"
   end
 

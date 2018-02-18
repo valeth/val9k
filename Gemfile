@@ -12,15 +12,9 @@ gem "logging", "~> 2"
 gem "activerecord"
 gem "active_record_migrations"
 gem "pg"
-
+gem "rufus-scheduler", "~> 3.4"
 gem "redis", "~> 3.0.1"
 gem "hiredis"
-gem "rufus-scheduler", "~> 3.4"
-gem "google-api-client", "~> 0.11"
-
-group :webserver do
-  gem "sinatra"
-end
 
 group :development do
   gem "pry"

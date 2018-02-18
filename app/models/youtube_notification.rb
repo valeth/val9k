@@ -12,6 +12,12 @@ class YoutubeNotification < ActiveRecord::Base
   end
 
   def thumbnail_url
-    "https://img.youtube.com/vi/#{video_id}/maxresdefault.jpg"
+    self["thumbnail_url"] || default_thumbnail_url
+  end
+
+private
+
+  def default_thumbnail_url
+    "https://i.ytimg.com/vi/#{video_id}/sddefault.jpg"
   end
 end

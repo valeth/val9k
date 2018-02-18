@@ -1,5 +1,6 @@
 class YoutubeChannel < ActiveRecord::Base
   validates :channel_id, presence: true, uniqueness: true
+  validates :name, presence: true
 
   has_many :youtube_notification_subscriptions
   has_many :youtube_notifications
@@ -10,5 +11,9 @@ class YoutubeChannel < ActiveRecord::Base
 
   def notification_subscriptions
     youtube_notification_subscriptions
+  end
+
+  def to_s
+    "#{name} (#{channel_id})"
   end
 end
