@@ -7,11 +7,11 @@ module YoutubeUpdate
     extend Discordrb::Commands::CommandContainer
     extend Utils
 
-    command(:yt_updates, {
+    command(:yt_updates,
       description: "Receive youtube upload notifications.",
       usage: "yt_updates UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates",
       required_permissions: %i[manage_webhooks]
-    }) do |event, *args|
+    ) do |event, *args|
       update_channel_id = parse_channel_mention(args[2])
       yt_id = args[1]
 

@@ -2,14 +2,12 @@
 
 require "json"
 require "active_support/core_ext/hash/keys"
+require_relative "notification"
 
 module YoutubeUpdate
   module PubSub
     extend Discordrb::EventContainer
-
-    DiscordEmbed = Discordrb::Webhooks::Embed
-    DiscordEmbedAuthor = Discordrb::Webhooks::EmbedAuthor
-    DiscordEmbedImage = Discordrb::Webhooks::EmbedImage
+    extend Notification
 
     ready do |event|
       start_redis_subscriber(event.bot)
@@ -36,46 +34,15 @@ module YoutubeUpdate
       YoutubeNotificationSubscription
         .joins(:youtube_channel)
         .where("youtube_channels.channel_id" => message[:youtube_channel_id])
-        .each do |sub|
-          notif = notification(sub.youtube_channel, message)
-          next if sub.notified?(notif)
-          notify_one(bot.channel(sub.discord_channel_id), notif)
-        end
+        .each { |sub| notify_one(bot, sub, message) }
     end
 
-    def notify_one(discord_channel, notif)
+    def notify_one(bot, sub, message)
+      notif = notification(sub.youtube_channel, message)
+      return if sub.notified?(notif)
+      discord_channel = bot.channel(sub.discord_channel_id)
       discord_channel.send_embed("", embed(notif))
-    end
-
-    # @param channel [YoutubeChannel]
-    # @param messge [Hash<String => String>]
-    # @return [YoutubeNotification]
-    def notification(channel, message)
-      YoutubeNotification.find_or_create_by(video_id: message[:youtube_video_id]) do |m|
-        m.title           = message[:title]
-        m.published_at    = message[:published]
-        m.updated_at      = message[:updated]
-        m.thumbnail_url   = message[:thumbnail_url]
-        m.description     = message[:description]
-        m.youtube_channel = channel
-      end
-    end
-
-    # Build a Discord embed from a notification.
-    # @param notif [YoutubeNotification]
-    # @return [DiscordEmbed]
-    def embed(notif)
-      DiscordEmbed.new(
-        title:  notif.title,
-        url:    notif.url,
-        author: DiscordEmbedAuthor.new(
-          name:   notif.youtube_channel.name,
-          url:    notif.youtube_channel.url
-        ),
-        image: DiscordEmbedImage.new(url: notif.thumbnail_url),
-        timestamp: notif.published_at,
-        color: 0xfc0c00
-      )
+      sub.notified(notif)
     end
   end
 end
