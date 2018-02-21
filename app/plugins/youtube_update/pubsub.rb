@@ -9,15 +9,17 @@ module YoutubeUpdate
     extend Discordrb::EventContainer
     extend Notification
 
+    @subscriber = nil
+
     ready do |event|
-      start_redis_subscriber(event.bot)
+      start_redis_subscriber(event.bot) unless @subscriber
     end
 
   module_function
 
     # @param bot [Discordrb::Bot]
     def start_redis_subscriber(bot)
-      Thread.new do
+      @subscriber ||= Thread.new do
         LOGGER.info { "Starting Redis YouTube subscriber listener..." }
 
         bot.redis.subscribe("youtube_updates") do |on|
