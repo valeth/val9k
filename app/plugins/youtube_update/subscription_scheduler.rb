@@ -27,15 +27,14 @@ module YoutubeUpdate
 
       response = RestClient.get("#{WEBSUB_URL}/subscribe/#{channel_id}")
 
-    rescue RestClient::ExceptionWithResponse => e
-      LOGGER.error { "Updating subscription for #{channel_id} failed: #{e}" }
-      raise SubscriptionFailed, e.message
-    else
       chan = youtube_channel(channel_id, JSON.parse(response.body)["channel_name"])
       chan.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
       chan.save
       LOGGER.info { "Updated, next update: #{chan.next_update}" }
       chan
+    rescue RestClient::ExceptionWithResponse => e
+      LOGGER.error { "Updating subscription for #{channel_id} failed: #{e}" }
+      raise SubscriptionFailed, e.message
     end
 
     # Schedule a channel for resubscription
