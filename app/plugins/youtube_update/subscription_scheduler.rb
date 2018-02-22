@@ -23,7 +23,7 @@ module YoutubeUpdate
     # @return [YoutubeChannel]
     def subscribe(channel_id)
       chan = YoutubeChannel.find_by(channel_id: channel_id)
-      return chan if chan && chan.next_update < DateTime.now
+      return chan if chan && chan.next_update > DateTime.now
 
       response = RestClient.get("#{WEBSUB_URL}/subscribe/#{channel_id}")
 
@@ -47,10 +47,20 @@ module YoutubeUpdate
       chan = subscribe(channel_id) if chan.nil?
 
       Thread.new do
-        LOGGER.info { "Scheduling #{chan} for resubscription in #{INTERVAL.inspect}..." }
+        first_at = chan.next_update <= DateTime.now ? (Time.now + 10) : chan.next_update
 
-        @scheduler.every("#{INTERVAL.to_i}s", first_at: chan.next_update, tag: channel_id) do
-          subscribe(channel_id)
+        LOGGER.info do
+          "Scheduling #{chan} for resubscription every #{INTERVAL.inspect}, first at #{first_at}"
+        end
+
+        # TODO: change retry mechanism
+        @scheduler.every("#{INTERVAL.to_i}s", first_at: first_at, tag: channel_id) do
+          begin
+            subscribe(channel_id)
+          rescue SubscriptionFailed
+            sleep 60
+            retry
+          end
         end
       end
 
