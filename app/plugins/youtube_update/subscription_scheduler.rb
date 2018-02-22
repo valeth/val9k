@@ -66,12 +66,12 @@ module YoutubeUpdate
       chan
     end
 
-    def unschedule(channel_id)
-      return unless scheduled?(channel_id)
+    def unschedule(chan)
+      return unless chan && scheduled?(chan)
 
-      LOGGER.info { "Unscheduling #{chan.name} (#{channel_id}) from resubscription..." }
+      LOGGER.info { "Unscheduling #{chan.name} (#{chan.channel_id}) from resubscription..." }
 
-      job, _ = @scheduler.jobs(tag: channel_id)
+      job, _ = @scheduler.jobs(tag: chan.channel_id)
       @schedulers.unschedule(job) if job
     end
 
