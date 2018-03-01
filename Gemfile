@@ -15,6 +15,7 @@ gem "pg"
 gem "rufus-scheduler", "~> 3.4"
 gem "redis", "~> 3.0.1"
 gem "hiredis"
+gem "retriable", "~> 3.1"
 
 group :development do
   gem "pry"

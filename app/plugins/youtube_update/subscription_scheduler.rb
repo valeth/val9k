@@ -3,6 +3,7 @@
 require "json"
 require "rest-client"
 require "rufus-scheduler"
+require "retriable"
 
 module YoutubeUpdate
   module SubscriptionScheduler
@@ -11,6 +12,10 @@ module YoutubeUpdate
     WEBSUB_URL = ENV.fetch("WEBSUB_URL")
     INTERVAL = 2.days.freeze
     @scheduler = Rufus::Scheduler.new
+
+    def @scheduler.on_error(job, exception)
+      LOGGER.error { exception.message }
+    end
 
     Thread.new do
       LOGGER.info { "Starting YouTube subscription scheduler..." }
@@ -32,9 +37,8 @@ module YoutubeUpdate
       chan.save
       LOGGER.info { "Updated, next update: #{chan.next_update}" }
       chan
-    rescue RestClient::ExceptionWithResponse => e
-      LOGGER.error { "Updating subscription for #{channel_id} failed: #{e}" }
-      raise SubscriptionFailed, e.message
+    rescue RestClient::ExceptionWithResponse, Errno::ECONNREFUSED, ActiveRecord::ConnectionTimeoutError => e
+      raise SubscriptionFailed, "Updating subscription for #{channel_id} failed: #{e.class}"
     end
 
     # Schedule a channel for resubscription
@@ -54,11 +58,15 @@ module YoutubeUpdate
 
         # TODO: change retry mechanism
         @scheduler.every("#{INTERVAL.to_i}s", first_at: first_at, tag: channel_id) do
-          begin
+          Retriable.retriable(
+            tries: 5,
+            multiplier: 7,
+            on: SubscriptionFailed,
+            on_retry: proc do |exception, try, _elapsed_time, next_interval|
+              LOGGER.error { "retry #{try}: #{exception.message}, retrying in #{next_interval.round(2)} seconds" }
+            end
+          ) do
             subscribe(channel_id)
-          rescue SubscriptionFailed
-            sleep 60
-            retry
           end
         end
       end
