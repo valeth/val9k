@@ -60,7 +60,8 @@ module YoutubeUpdate
       chan = subscribe(channel_id) if chan.nil?
 
       Thread.new do
-        next_update = chan.next_update <= DateTime.now ? Time.now : chan.next_update
+        # add 10 seconds padding, so the scheduler doesn't complain about starting jobs in the past
+        next_update = chan.next_update <= DateTime.now ? Time.now + 10 : chan.next_update
 
         LOGGER.info { "Scheduling #{chan} for resubscription every #{INTERVAL.inspect}, first at #{next_update}" }
 
