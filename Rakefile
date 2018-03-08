@@ -13,6 +13,8 @@ end
 ActiveRecordMigrations.load_tasks
 
 task run: "db:migrate" do
+  trap("SIGINT") { exit(0) }
+  trap("SIGTERM") { exit(0) }
   ruby "bin/bot"
 end
 

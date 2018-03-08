@@ -13,6 +13,15 @@ require "database"
 require "events"
 require "commands"
 
+trap "SIGINT" do
+  LOGGER.info { "Keyboard interrupt, Exiting..." }
+  exit(0)
+end
+
+trap "SIGTERM" do
+  exit(0)
+end
+
 class VAL9K < Discordrb::Commands::CommandBot
   VERSION = "0.2.0"
 
@@ -27,6 +36,8 @@ class VAL9K < Discordrb::Commands::CommandBot
     load_config
 
     super(@config)
+    at_exit { stop }
+
     initialize_database
     initialize_redis
 
