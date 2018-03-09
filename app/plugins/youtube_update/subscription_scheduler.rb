@@ -43,21 +43,27 @@ module YoutubeUpdate
     # @return [YoutubeChannel]
     def subscribe(channel_id)
       response = RestClient.get("#{WEBSUB_URL}/subscribe/#{channel_id}")
-      YoutubeChannel.find_or_create_by(channel_id: channel_id) do |m|
+
+      chan = YoutubeChannel.find_or_create_by(channel_id: channel_id) do |m|
         m.name        = JSON.parse(response.body)["channel_name"]
         m.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
       end
+      chan.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
+      chan.save
+
+      chan
     rescue RestClient::ExceptionWithResponse, Errno::ECONNREFUSED, ActiveRecord::ConnectionTimeoutError => e
       raise SubscriptionFailed, "Updating subscription for #{channel_id} failed: #{e.class}"
     end
 
     # Schedule a channel for resubscription
     # @param channel_id [String]
+    # @raises SubscriptionFailed
     # @return [YoutubeChannel]
     def schedule(channel_id)
       chan = YoutubeChannel.find_by(channel_id: channel_id)
       return chan if chan && scheduled?(channel_id)
-      chan = subscribe(channel_id) if chan.nil?
+      chan ||= subscribe(channel_id)
 
       Thread.new do
         # add 10 seconds padding, so the scheduler doesn't complain about starting jobs in the past
@@ -69,7 +75,7 @@ module YoutubeUpdate
           begin
             Retriable.with_context(:ytsub) do
               chan = subscribe(channel_id)
-              LOGGER.info { "Updated, next update: #{chan.next_update}" }
+              LOGGER.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
             end
           rescue SubscriptionFailed
             LOGGER.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
