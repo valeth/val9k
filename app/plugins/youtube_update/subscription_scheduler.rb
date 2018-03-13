@@ -1,15 +1,11 @@
 # frozen_string_literal: true
 
-require "json"
-require "rest-client"
 require "rufus-scheduler"
 require "retriable"
+require_relative "request"
 
 module YoutubeUpdate
   module SubscriptionScheduler
-    SubscriptionFailed = Class.new(StandardError)
-
-    WEBSUB_URL = ENV.fetch("WEBSUB_URL")
     INTERVAL = 2.days.freeze
     @scheduler = Rufus::Scheduler.new
 
@@ -18,7 +14,7 @@ module YoutubeUpdate
       config.contexts[:ytsub] = {
         tries: @tries,
         multiplier: 7,
-        on: SubscriptionFailed,
+        on: Request::SubscriptionFailed,
         on_retry: proc do |err, try, _elapsed, next_interval|
           LOGGER.error do
             "try #{try}/#{@tries}: #{err.message}" +
@@ -39,23 +35,6 @@ module YoutubeUpdate
 
   module_function
 
-    # @param channel_id [String]
-    # @return [YoutubeChannel]
-    def subscribe(channel_id)
-      response = RestClient.get("#{WEBSUB_URL}/subscribe/#{channel_id}")
-
-      chan = YoutubeChannel.find_or_create_by(channel_id: channel_id) do |m|
-        m.name        = JSON.parse(response.body)["channel_name"]
-        m.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
-      end
-      chan.next_update = DateTime.now.advance(seconds: INTERVAL.to_i)
-      chan.save
-
-      chan
-    rescue RestClient::ExceptionWithResponse, Errno::ECONNREFUSED, ActiveRecord::ConnectionTimeoutError => e
-      raise SubscriptionFailed, "Updating subscription for #{channel_id} failed: #{e.class}"
-    end
-
     # Schedule a channel for resubscription
     # @param channel_id [String]
     # @raises SubscriptionFailed
@@ -63,7 +42,7 @@ module YoutubeUpdate
     def schedule(channel_id)
       chan = YoutubeChannel.find_by(channel_id: channel_id)
       return chan if chan && scheduled?(channel_id)
-      chan ||= subscribe(channel_id)
+      chan ||= Request.subscribe(channel_id, INTERVAL)
 
       Thread.new do
         # add 10 seconds padding, so the scheduler doesn't complain about starting jobs in the past
@@ -74,10 +53,10 @@ module YoutubeUpdate
         @scheduler.every("#{INTERVAL.to_i}s", first_at: next_update, tag: channel_id) do
           begin
             Retriable.with_context(:ytsub) do
-              chan = subscribe(channel_id)
+              chan = Request.subscribe(channel_id, INTERVAL)
               LOGGER.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
             end
-          rescue SubscriptionFailed
+          rescue Request::SubscriptionFailed
             LOGGER.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
           end
         end
@@ -86,6 +65,7 @@ module YoutubeUpdate
       chan
     end
 
+    # @param chan [YoutubeChannel]
     def unschedule(chan)
       return unless chan && scheduled?(chan)
 
