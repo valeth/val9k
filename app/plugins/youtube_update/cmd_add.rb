@@ -16,21 +16,22 @@ module YoutubeUpdate
       required_permissions: %i[manage_webhooks],
       min_args: 2,
       usage: "addyoutubeupdate Jim Sterling #youtube_updates"
-    ) do |event, *yt_channel, chan_mention|
+    ) do |event, *channel_name, chan_mention|
+      channel_name = channel_name.join(" ")
       update_cid = parse_channel_mention(chan_mention)
       next "Channel mention required as second argument" unless update_cid
 
-      channels = Request.search_channels(yt_channel.join(" "))
+      channels = Request.search_channels(channel_name)
       list_search_results(event, channels)
 
       event.author.await(:"addyoutubeupdate_#{event.author.id}") do |choice_event|
         begin
           with_choice(choice_event, channels) do |yt_cid|
             chan = add_subscription(yt_cid, update_cid)
-            choice_event.send_message("Added #{chan_mention} to update channel list for `#{chan.name}`")
+            choice_event.send_message("Notifications for `#{chan.name}` will be sent to #{chan_mention}.")
           end
         rescue Request::SubscriptionFailed
-          choice_event.send_message("Failed to add subscription")
+          choice_event.send_message("Failed to subscribe to notifications for `#{channel_name}`.")
         end
       end
 
