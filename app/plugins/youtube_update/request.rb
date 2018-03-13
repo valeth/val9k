@@ -7,7 +7,6 @@ require "json"
 module YoutubeUpdate
   module Request
     SubscriptionFailed = Class.new(StandardError)
-    DiscordEmbedFooter = Discordrb::Webhooks::EmbedFooter
     WEBSUB_URL = ENV.fetch("WEBSUB_URL")
 
   module_function
@@ -32,7 +31,7 @@ module YoutubeUpdate
     # @param channel_name [String]
     # @return [Array<Hash>] List of search results
     def search_channels(channel_name)
-      results = RestClient.get("#{SubscriptionScheduler::WEBSUB_URL}/search",
+      results = RestClient.get("#{WEBSUB_URL}/search",
         params: { channel_name: channel_name }
       )
 
