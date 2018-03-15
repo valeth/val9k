@@ -15,10 +15,14 @@ module Moderator
     user   = prune_target(event)
     amount = args.first || 10
 
+    event.message.delete()
     messages = user_messages(chan, user, amount)
     msg =
       if messages.empty?
         "No messages to prune"
+      elsif messages.size == 1
+        chan.delete_message(messages.first)
+        "#{event.author.name} deleted one message of #{user.name} from #{event.channel.mention}"
       else
         chan.delete_messages(messages)
         "#{event.author.name} deleted #{amount} messages of #{user.name} from #{event.channel.mention}"
