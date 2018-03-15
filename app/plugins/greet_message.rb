@@ -1,5 +1,3 @@
-require "json"
-
 module GreetMessage
   extend Discordrb::Commands::CommandContainer
   extend Discordrb::EventContainer
@@ -26,7 +24,7 @@ module GreetMessage
     next unless greet_message_enabled?(event.server.id)
 
     LOGGER.info { "#{event.user.name} joined #{event.server.name}" }
-    greetmsg = greet_message(event.server.id)&.content
+    greetmsg = greet_message(event.server.id)
 
     next unless greetmsg
 
@@ -40,24 +38,21 @@ module GreetMessage
 module_function
 
   def set(sid, text)
-    msg = greet_message(sid)
-
-    if msg
-      msg.content = text
-      msg.save
-    else
-      ServerMessage.create do |m|
-        m.sid      = sid
-        m.msg_type = "greet_message"
-        m.content  = text
-      end
-    end
-
+    msg = ServerMessage.find_or_initialize_by(sid: sid, msg_type: "greet_message")
+    msg.content = text
+    msg.save
     "Greet message updated."
   end
 
   def get(sid)
-    greet_message(sid)&.content || "No greetmessage set."
+    greet_message(sid) || "No greetmessage set."
+  end
+
+  def toggle(sid)
+    ServerSetting.set(sid, "toggle_greetmsg", enabled: false) do |s|
+      { enabled: !s["enabled"] }
+    end
+    status(sid)
   end
 
   def status(sid)
@@ -65,36 +60,11 @@ module_function
     "Greet Message: #{status}"
   end
 
-  def toggle(sid)
-    msg = ServerSetting.find_by(sid: sid, key: "toggle_greetmsg")
-
-    if msg
-      current = JSON.parse(msg.value)
-      current["enabled"] = !current["enabled"]
-      msg.value = JSON.generate(current)
-      msg.save
-    else
-      ServerSetting.create do |m|
-        m.sid   = sid
-        m.key   = "toggle_greetmsg"
-        m.value = JSON.generate(enabled: true)
-      end
-    end
-
-    status(sid)
-  end
-
   def greet_message_enabled?(sid)
-    setting = ServerSetting.find_by(sid: sid, key: "toggle_greetmsg")
-
-    if setting
-      JSON.parse(setting.value)["enabled"]
-    else
-      false
-    end
+    ServerSetting.get(sid, "toggle_greetmsg").fetch("enabled", false)
   end
 
   def greet_message(sid)
-    ServerMessage.find_by(sid: sid, msg_type: "greet_message")
+    ServerMessage.find_by(sid: sid, msg_type: "greet_message")&.content
   end
 end
