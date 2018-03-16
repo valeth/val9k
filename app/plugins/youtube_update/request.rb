@@ -34,10 +34,7 @@ module YoutubeUpdate
       results = RestClient.get("#{WEBSUB_URL}/search",
         params: { channel_name: channel_name }
       )
-
       channels = JSON.parse(results)
-      raise SubscriptionFailed if channels.empty?
-
       channels.map { |chan| chan.symbolize_keys }
     end
   end

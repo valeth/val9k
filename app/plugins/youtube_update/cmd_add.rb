@@ -22,6 +22,7 @@ module YoutubeUpdate
       next "Channel mention required as second argument" unless update_cid
 
       channels = Request.search_channels(channel_name)
+      next "No channels found matching #{channel_name}" if channels.empty?
       list_search_results(event, channels)
 
       event.author.await(:"addyoutubeupdate_#{event.author.id}") do |choice_event|
