@@ -11,7 +11,10 @@ module YoutubeUpdate
       max_args: 1
     ) do |event, mention = nil|
       sid = event.server.id
-      if mention
+      if mention == "none"
+        ServerSetting.set(sid, "youtube_update_role", role: nil)
+        "Unset notification role for this server."
+      elsif mention
         role = event.bot.parse_mention(mention)
         next "Role is not mentionable or invalid role mention" unless role
         Notification.role(sid, role.id)
@@ -22,7 +25,7 @@ module YoutubeUpdate
           role = event.server.role(role_id)
           "Role `#{role.name}` is used for YouTube notifications."
         else
-          "No notification role set on this server"
+          "No notification role set on this server."
         end
       end
     end
