@@ -43,7 +43,10 @@ module YoutubeUpdate
       notif = notification(sub.youtube_channel, message)
       return if sub.notified?(notif)
       discord_channel = bot.channel(sub.discord_channel_id)
-      discord_channel.send_embed("", embed(notif))
+      server = discord_channel.server
+      role_id = Notification.role(server.id)
+      msg = role_id ? server.role(role_id).mention : ""
+      discord_channel.send_embed(msg, embed(notif))
       sub.notified(notif)
     end
   end

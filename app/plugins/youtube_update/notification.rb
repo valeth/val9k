@@ -36,5 +36,17 @@ module YoutubeUpdate
         m.youtube_channel = channel
       end
     end
+
+  module_function
+
+    def role(sid, rid = nil)
+      if rid
+        ServerSetting.set(sid, "youtube_update_role") do |s|
+          { role: rid.to_i }
+        end
+      else
+        ServerSetting.get(sid, "youtube_update_role", role: nil).fetch("role", nil)
+      end
+    end
   end
 end

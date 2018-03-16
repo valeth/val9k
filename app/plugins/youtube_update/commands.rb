@@ -3,6 +3,7 @@
 require_relative "cmd_add"
 require_relative "cmd_del"
 require_relative "cmd_list"
+require_relative "cmd_role"
 
 module YoutubeUpdate
   module Commands
@@ -11,6 +12,7 @@ module YoutubeUpdate
     include! CommandAdd
     include! CommandDel
     include! CommandList
+    include! CommandRole
 
     command(
       %i[youtubeupdates ytupd],
@@ -23,6 +25,7 @@ module YoutubeUpdate
       when "add"  then bot.execute_command(:addyoutubeupdate, event, args)
       when "del"  then bot.execute_command(:delyoutubeupdate,  event, args)
       when "list" then bot.execute_command(:listyoutubeupdates, event, [])
+      when "role" then bot.execure_command(:youtubeupdaterole, event, args)
       else %Q{Unknown subcommand "#{subcmd}"}
       end
     end
