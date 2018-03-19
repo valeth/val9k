@@ -23,10 +23,11 @@ module YoutubeUpdate
 
       channels = Request.search_channels(channel_name)
       next "No channels found matching #{channel_name}" if channels.empty?
-      list_search_results(event, channels)
+      list_message = list_search_results(event, channels)
 
       event.author.await(:"addyoutubeupdate_#{event.author.id}") do |choice_event|
         begin
+          list_message.delete
           with_choice(choice_event, channels) do |yt_cid|
             chan = add_subscription(yt_cid, update_cid)
             choice_event.send_message("Notifications for `#{chan.name}` will be sent to #{chan_mention}.")
@@ -41,16 +42,22 @@ module YoutubeUpdate
 
   module_function
 
+    # @param event [Discordrb::Event]
+    # @param channels [Array<Hash>]
     def with_choice(event, channels)
       choice = event.message.content
       number = choice.match?(/^\d+$/)
       choice = choice.to_i
       in_range = choice.between?(1, channels.size - 1)
+      event.message.delete
       return event.send_temporary_message("That's not a number", 5) unless number
       return event.send_temporary_message("Choice not in range", 5) unless in_range
       yield(channels.dig(choice.to_i.pred, :id)) if block_given?
     end
 
+    # @param event [Discordrb::Event]
+    # @param channels [Array<Hash>]
+    # @return [Discordrb::Message]
     def list_search_results(event, channels)
       event.channel.send_embed do |embed|
         embed.title = "YouTube search results"
@@ -66,6 +73,9 @@ module YoutubeUpdate
       end
     end
 
+    # @param yt_cid [String]
+    # @param update_cid [Integer]
+    # @return [YoutubeChannel]
     def add_subscription(yt_cid, update_cid)
       chan = SubscriptionScheduler.schedule(yt_cid)
       YoutubeNotificationSubscription.create do |m|
