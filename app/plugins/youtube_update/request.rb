@@ -36,6 +36,9 @@ module YoutubeUpdate
       )
       channels = JSON.parse(results)
       channels.map { |chan| chan.symbolize_keys }
+    rescue RestClient::ExceptionWithResponse, Errno::ECONNREFUSED => e
+      LOGGER.error { "Channel search failed: #{e.message}" }
+      []
     end
   end
 end
