@@ -16,4 +16,4 @@ COPY Gemfile Gemfile.lock ./
 RUN bundle install
 COPY . .
 
-ENTRYPOINT ["bundle", "exec", "rake", "run"]
+ENTRYPOINT ["bundle", "exec", "rake"]

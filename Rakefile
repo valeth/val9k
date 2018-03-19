@@ -7,7 +7,7 @@ Dotenv.load
 
 ActiveRecordMigrations.configure do |config|
   config.yaml_config = "config/database.yml"
-  config.environment = ENV["DISCORD_ENV"] || "development"
+  config.environment = ENV.fetch("DISCORD_ENV") { "development" }
 end
 
 ActiveRecordMigrations.load_tasks
