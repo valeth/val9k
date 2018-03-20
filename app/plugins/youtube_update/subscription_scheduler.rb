@@ -3,11 +3,14 @@
 require "rufus-scheduler"
 require "retriable"
 require_relative "request"
+require "thread"
 
 module YoutubeUpdate
   module SubscriptionScheduler
     INTERVAL = 2.days.freeze
     @scheduler = Rufus::Scheduler.new
+    @subscriber_queue = Queue.new
+    @subscriber_threads = []
 
     @tries = 4
     Retriable.configure do |config|
@@ -30,10 +33,30 @@ module YoutubeUpdate
 
     Thread.new do
       LOGGER.info { "Starting YouTube subscription scheduler..." }
+      @subscriber_threads = 3.times.map { subscriber_thread }
       YoutubeChannel.all.each { |chan| schedule(chan.channel_id) }
     end
 
   module_function
+
+    def subscriber_thread
+      thread = Thread.new do
+        loop do
+          channel_id = @subscriber_queue.deq
+
+          begin
+            Retriable.with_context(:ytsub) do
+              chan = Request.subscribe(channel_id, INTERVAL)
+              LOGGER.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
+            end
+          rescue Request::SubscriptionFailed
+            LOGGER.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
+          end
+        end
+      end
+      thread.name = "Subscriber"
+      thread
+    end
 
     # Schedule a channel for resubscription
     # @param channel_id [String]
@@ -51,14 +74,7 @@ module YoutubeUpdate
         LOGGER.info { "Scheduling #{chan} for resubscription every #{INTERVAL.inspect}, first at #{next_update}" }
 
         @scheduler.every("#{INTERVAL.to_i}s", first_at: next_update, tag: channel_id) do
-          begin
-            Retriable.with_context(:ytsub) do
-              chan = Request.subscribe(channel_id, INTERVAL)
-              LOGGER.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
-            end
-          rescue Request::SubscriptionFailed
-            LOGGER.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
-          end
+          @subscriber_queue.enq(channel_id)
         end
       end
 
