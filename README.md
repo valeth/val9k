@@ -4,12 +4,32 @@
 
 # VAL9000
 
-## Requirements
+## Commands
+
+Module     | Command (Alias)                  | Required Bot Permissions
+---------- | -------------------------------- | -------------------
+General    | `help`                           | Send Message
+General    | `info`                           | Send Message
+YouTube    | `youtubeupdates` (`ytupd`)       | Send/Delete Message
+YouTube    | `addyoutubeupdate` (`addytupd`)  | Send/Delete Message
+YouTube    | `delyoutubeupdate` (`delytupd`)  | Send Message
+YouTube    | `listyoutubeupdates` (`lsytupd`) | Send Message
+YouTube    | `youtubeupdaterole` (`ytupdrl`)  | Send Message
+Greet      | `greetmsg`                       | Send Message
+Quotes     | `quote`                          | Send Message
+Roles      | `selfrole`                       | Send Message
+Roles      | `selfroles`                      | Send Message
+Steam      | `steam`                          | Send Message
+Moderation | `prune`                          | Send/Delete Message
+
+## Development
+
+### Requirements
 - Ruby
 - PostgreSQL server
 - Redis server (for YouTube notifications)
 
-## Setup
+### Setup
 
 Run `bundle install --with=webserver` to install all necessary dependencies.
 
