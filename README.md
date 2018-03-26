@@ -1,3 +1,7 @@
+<a href="https://discordbots.org/bot/321450850629189633" >
+  <img src="https://discordbots.org/api/widget/status/321450850629189633.svg?noavatar=true" alt="Discord Music Bot" />
+</a>
+
 # VAL9000
 
 ## Requirements
