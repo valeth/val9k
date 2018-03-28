@@ -48,6 +48,14 @@ class VAL9K < Discordrb::Commands::CommandBot
     load_plugins
   end
 
+  def log_exception(e)
+    if e.is_a? Discordrb::Errors::NoPermission
+      LOGGER.error { "Permission Error: #{e.message}" }
+    else
+      super(e)
+    end
+  end
+
 private
 
   def load_config

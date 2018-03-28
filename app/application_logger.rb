@@ -25,13 +25,3 @@ Logging.appenders.stdout(
 LOGGER = Logging.logger.root
 LOGGER.level = :debug
 LOGGER.appenders = :stdout
-
-class Discordrb::Logger
-  def log_exception(e)
-    if e.is_a? Discordrb::Errors::NoPermission
-      LOGGER.error { "Permission Error: #{e.message}" }
-    else
-      super(e)
-    end
-  end
-end
