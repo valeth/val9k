@@ -6,6 +6,7 @@ require "active_support/core_ext/hash/keys"
 require "active_support/core_ext/string/inflections"
 require "redis"
 require "discordrb"
+require "discordrb/message"
 
 require "application_logger"
 require "utils"

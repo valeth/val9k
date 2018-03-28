@@ -27,7 +27,7 @@ module YoutubeUpdate
 
       event.author.await(:"addyoutubeupdate_#{event.author.id}") do |choice_event|
         begin
-          list_message.delete
+          list_message.try_delete
           with_choice(choice_event, channels) do |yt_cid|
             chan = add_subscription(yt_cid, update_cid)
             choice_event.send_message("Notifications for `#{chan.name}` will be sent to #{chan_mention}.")
@@ -49,7 +49,7 @@ module YoutubeUpdate
       number = choice.match?(/^\d+$/)
       choice = choice.to_i
       in_range = choice.between?(1, channels.size - 1)
-      event.message.delete
+      event.message.try_delete
       return event.send_temporary_message("That's not a number", 5) unless number
       return event.send_temporary_message("Choice not in range", 5) unless in_range
       yield(channels.dig(choice.to_i.pred, :id)) if block_given?
