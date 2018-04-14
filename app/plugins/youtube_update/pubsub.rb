@@ -29,6 +29,7 @@ module YoutubeUpdate
           end
         end
       end
+      @subscriber.name = "Notifier"
     end
 
     # @param bot [Discordrb::Bot]
