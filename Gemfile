@@ -3,7 +3,7 @@ source "https://rubygems.org"
 ruby "~> 2.4"
 
 gem "rake"
-gem "discordrb" # , git: "https://github.com/meew0/discordrb", branch: "master"
+gem "discordrb", git: "https://github.com/meew0/discordrb", branch: "master"
 gem "dotenv"
 gem "activesupport"
 gem "nokogiri"
