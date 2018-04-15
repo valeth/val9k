@@ -51,6 +51,10 @@ module YoutubeUpdate
       msg = role_id ? server.role(role_id).mention : ""
       discord_channel.send_embed(msg, embed(notif))
       sub.notified(notif)
+    rescue StandardError => err
+      LOGGER.error do
+        "Failed to send notification for #{sub.youtube_channel}: #{err.message}"
+      end
     end
   end
 end
