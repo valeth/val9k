@@ -64,7 +64,7 @@ module Events
 
     DiscordChannel.transaction do
       only_local.each do |sid, cid|
-        DiscordChannel.find_by(sid: sid, cid: cid).delete
+        DiscordChannel.find_by(sid: sid, cid: cid).destroy
       end
     end
   end
