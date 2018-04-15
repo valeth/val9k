@@ -15,7 +15,7 @@ class YoutubeNotificationSubscription < ActiveRecord::Base
   end
 
   def discord_channel_id
-    discord_channel.cid
+    discord_channel&.cid
   end
 
   def notified?(notification)
