@@ -14,6 +14,8 @@ require "database"
 require "events"
 require "commands"
 
+Thread.abort_on_exception = (ENV["DISCORD_ENV"] == "development") || !ENV["THREAD_ABORT_ON_EXCEPTION"].nil?
+
 trap "SIGINT" do
   LOGGER.info { "Keyboard interrupt, Exiting..." }
   exit(0)
