@@ -7,17 +7,18 @@ require_relative "cmd_role"
 
 module YoutubeUpdate
   module Commands
-    extend Discordrb::Commands::CommandContainer
+    extend Plugin
 
     include! CommandAdd
     include! CommandDel
     include! CommandList
     include! CommandRole
 
-    command(
+    cmd(
       %i[youtubeupdates ytupd],
       description: "Receive youtube upload notifications.",
-      usage: "youtubeupdates add|del|list UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates"
+      usage: "youtubeupdates add|del|list UCtxoI129gkBWW8_kNgJrxdQ #youtube_updates",
+      skip_usage_log: true
     ) do |event, subcmd, *args|
       bot = event.bot
 

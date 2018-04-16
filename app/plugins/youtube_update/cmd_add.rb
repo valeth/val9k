@@ -6,12 +6,12 @@ require_relative "subscription_scheduler"
 
 module YoutubeUpdate
   module CommandAdd
-    extend Discordrb::Commands::CommandContainer
+    extend Plugin
     extend Utils
 
     DiscordEmbedFooter = Discordrb::Webhooks::EmbedFooter
 
-    command(
+    cmd(
       %i[addyoutubeupdate addytupd],
       required_permissions: %i[manage_webhooks],
       min_args: 2,

@@ -3,10 +3,8 @@
 require_relative "youtube_update/pubsub"
 require_relative "youtube_update/commands"
 
-
 module YoutubeUpdate
-  extend Discordrb::EventContainer
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
 
   include! PubSub
   include! Commands

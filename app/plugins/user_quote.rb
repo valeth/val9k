@@ -1,16 +1,15 @@
 require "utils"
 
 module UserQuote
-  extend Discordrb::Commands::CommandContainer
-  extend Discordrb::EventContainer
+  extend Plugin
   extend Utils
 
-  options = {
+  cmd(
+    :quote,
     min_args: 1,
     description: "Manage quotes on this server.",
     usage: "quote [add <quote name> <quote text> | del <quote name> | <quote name>]"
-  }
-  command :quote, options do |event, *args|
+  ) do |event, *args|
     sid    = event.server.id
     author = event.author.id
 

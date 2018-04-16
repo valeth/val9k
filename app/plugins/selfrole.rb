@@ -1,14 +1,14 @@
 require "utils"
 
 module Selfrole
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
   extend Utils
 
-  options = {
+  cmd(
+    :selfrole,
     description: "Toggle a selfrole.",
     min_args: 1
-  }
-  command :selfrole, options do |event, *args|
+  ) do |event, *args|
     case args.first
     when "add"
       next "Not permitted!" unless event.author.permission?(:manage_roles)
@@ -21,11 +21,11 @@ module Selfrole
     end
   end
 
-  options = {
+  cmd(
+    :selfroles,
     description: "List all selfroles on this server.",
     max_args: 0
-  }
-  command :selfroles, options do |event|
+  ) do |event|
     server = event.server
     roles = all(server.id).map { |e| server.role(e).name }
     if roles.empty?

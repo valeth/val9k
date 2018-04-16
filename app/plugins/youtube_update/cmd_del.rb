@@ -2,10 +2,10 @@
 
 module YoutubeUpdate
   module CommandDel
-    extend Discordrb::Commands::CommandContainer
+    extend Plugin
     extend Utils
 
-    command(
+    cmd(
       %i[delyoutubeupdate delytupd],
       required_permissions: %i[manage_webhooks],
       min_args: 2,

@@ -7,18 +7,19 @@ require "nokogiri"
 require "application_logger"
 
 module SteamSearch
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
 
   STEAM_BASE_URL = "https://store.steampowered.com/search"
 
   Embed = Discordrb::Webhooks::Embed
 
-  options = {
+  cmd(
+    :steam,
     min_args: 1,
     description: "Search the Steam store.",
-    usage: "steam <search query>"
-  }
-  command :steam, options do |event, *args|
+    usage: "steam <search query>",
+    help_available: false
+  ) do |event, *args|
     query = args.join(" ")
     event.channel.send_embed do |embed|
       embed.title = "Steam search results"

@@ -1,13 +1,12 @@
 module GreetMessage
-  extend Discordrb::Commands::CommandContainer
-  extend Discordrb::EventContainer
+  extend Plugin
 
-  options = {
+  cmd(
+    :greetmsg,
     required_permissions: %i[manage_server],
     description: "Control a server's greet message for joining users.",
     usage: "greetmsg [get | set <text> | toggle | status]"
-  }
-  command :greetmsg, options do |event, *args|
+  ) do |event, *args|
     sid = event.server.id
 
     next get(sid) if args.empty?

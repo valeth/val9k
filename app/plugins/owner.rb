@@ -1,14 +1,14 @@
 require "open-uri"
 
 module Owner
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
   extend Utils
 
-  options = {
+  cmd(
+    :eval,
     help_available: false,
     description: "Evaluate ruby code."
-  }
-  command :eval, options do |event, *code|
+  ) do |event, *code|
     next unless bot_owner?(event)
 
     begin
@@ -18,23 +18,23 @@ module Owner
     end
   end
 
-  options = {
+  cmd(
+    :kill,
     help_available: false,
     description: "Kill the current bot instance."
-  }
-  command :kill, options do |event|
+  ) do |event|
     next unless bot_owner?(event)
 
     event.channel.send("Shutting down...")
     exit
   end
 
-  options = {
+  cmd(
+    :setavatar,
     help_available: false,
     max_args: 1,
     description: "Set the bot's avatar image."
-  }
-  command :setavatar, options do |event, *args|
+  ) do |event, *args|
     next unless bot_owner?(event)
     attachment = event.message.attachments.first
 

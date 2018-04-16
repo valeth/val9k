@@ -4,9 +4,10 @@ require_relative "notification"
 
 module YoutubeUpdate
   module CommandRole
-    extend Discordrb::Commands::CommandContainer
+    extend Plugin
 
-    command(%i[youtubeupdaterole ytupdrl],
+    cmd(
+      %i[youtubeupdaterole ytupdrl],
       required_permissions: %i[manage_webhooks],
       max_args: 1
     ) do |event, mention = nil|

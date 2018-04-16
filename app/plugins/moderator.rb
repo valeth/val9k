@@ -1,16 +1,16 @@
 require "application_logger"
 
 module Moderator
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
 
-  options = {
+  cmd(
+    :prune,
     description: "Delete multiple messages from a channel.",
     usage: "prune 10 @mention",
     required_permissions: %i[manage_messages],
     max_args: 2,
     arg_types: [Integer, String]
-  }
-  command :prune, options do |event, *args|
+  ) do |event, *args|
     chan   = event.channel
     user   = prune_target(event)
     amount = args.first || 10

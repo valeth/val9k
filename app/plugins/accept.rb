@@ -1,7 +1,8 @@
 module Accept
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
 
-  command(:accept,
+  cmd(
+    :accept,
     max_args: 0
   ) do |event|
     server = event.server
@@ -17,7 +18,8 @@ module Accept
     nil
   end
 
-  command(:member_role,
+  cmd(
+    :member_role,
     required_permissions: %i[manage_roles],
     max_args: 1
   ) do |event, role_name|

@@ -11,6 +11,7 @@ require "discordrb/message"
 require "application_logger"
 require "utils"
 require "database"
+require "plugin"
 require "events"
 require "commands"
 

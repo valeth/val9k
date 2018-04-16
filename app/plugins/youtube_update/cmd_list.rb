@@ -2,10 +2,10 @@
 
 module YoutubeUpdate
   module CommandList
-    extend Discordrb::Commands::CommandContainer
+    extend Plugin
     extend Utils
 
-    command(
+    cmd(
       %i[listyoutubeupdates lsytupd],
       max_args: 0,
       usage: "listyoutubeupdates"
