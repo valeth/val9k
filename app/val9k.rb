@@ -31,11 +31,13 @@ class VAL9K < Discordrb::Commands::CommandBot
 
   attr_reader :database
   attr_reader :redis
+  attr_reader :startup_timestamp
 
   def initialize
     @config = {}
     @database = nil
     @redis = nil
+    @startup_timestamp = DateTime.now.freeze
 
     load_config
 

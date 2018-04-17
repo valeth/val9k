@@ -19,7 +19,6 @@ module YoutubeUpdate
 
     # @param bot [Discordrb::Bot]
     def start_redis_subscriber(bot)
-      @startup_timestamp = DateTime.now.freeze
       @subscriber ||= Thread.new do
         LOGGER.info { "Starting Redis YouTube subscriber listener..." }
 
@@ -44,7 +43,7 @@ module YoutubeUpdate
     def notify_one(bot, sub, message)
       notif = notification(sub.youtube_channel, message)
       return if sub.notified?(notif)
-      return if notif.published_at < @startup_timestamp
+      return if notif.published_at < bot.startup_timestamp
       discord_channel = bot.channel(sub.discord_channel_id)
       server = discord_channel.server
       role_id = Notification.role(server.id)
