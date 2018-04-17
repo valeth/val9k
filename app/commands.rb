@@ -34,6 +34,7 @@ module Commands
         Servers:           #{event.bot.servers.size}
         Users:             #{event.bot.users.size}
         Login Name:        #{event.bot.profile.name}
+        Start Time:        #{event.bot.startup_timestamp}
       STATS
     end
   end

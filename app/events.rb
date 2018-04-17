@@ -6,6 +6,7 @@ module Events
   extend Discordrb::EventContainer
 
   ready do |event|
+    LOGGER.info { "Started at #{event.bot.startup_timestamp}" }
     bot = event.bot
     LOGGER.info { "Logged in as #{bot.profile.name}" }
     game = "#{bot.prefix}help"
