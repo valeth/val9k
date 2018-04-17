@@ -4,13 +4,13 @@ require "utils"
 require_relative "application_logger"
 
 module Commands
-  extend Discordrb::Commands::CommandContainer
+  extend Plugin
   extend Utils
 
-  options = {
+  cmd(
+    :info,
     description: "General information about the bot."
-  }
-  command :info, options do |event|
+  ) do |event|
     code_block(nil, syntax: :haskell) do
       <<~INFO
         Author:  Valeth
@@ -20,11 +20,11 @@ module Commands
     end
   end
 
-  options = {
+  cmd(
+    :stats,
     help_available: false,
     description: "Just statistics."
-  }
-  command :stats, options do |event|
+  ) do |event|
     discordrb_gem = Gem::Specification.find_by_name("discordrb")
     code_block(nil, syntax: :haskell) do
       <<~STATS
@@ -38,11 +38,11 @@ module Commands
     end
   end
 
-  options = {
+  cmd(
+    :invite,
     help_available: false,
     description: "Invite the bot to a server."
-  }
-  command :invite, options do |event|
+  ) do |event|
     event.bot.invite_url
   end
 end
