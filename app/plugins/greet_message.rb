@@ -1,5 +1,6 @@
 module GreetMessage
   extend Plugin
+  extend Utils
 
   cmd(
     :greetmsg,
@@ -16,6 +17,7 @@ module GreetMessage
     when "set"    then set(sid, args[1..-1].join(" "))
     when "toggle" then toggle(sid)
     when "status" then status(sid)
+    when "channel" then channel(event, args[1])
     end
   end
 
@@ -31,10 +33,19 @@ module GreetMessage
     greetmsg.gsub!("{user}", event.user.mention)
     greetmsg.gsub!("{server}", event.server.name)
 
-    event.server.default_channel.send(greetmsg)
+    greet_channel(event).send(greetmsg)
   end
 
 module_function
+
+  def greet_channel(event)
+    channel_id = ServerSetting.get(event.server.id, "greetmsg_channel")&.fetch("cid", nil)
+    if channel_id
+      event.bot.channel(channel_id)
+    else
+      event.server.default_channel
+    end
+  end
 
   def set(sid, text)
     msg = ServerMessage.find_or_initialize_by(sid: sid, msg_type: "greet_message")
@@ -65,5 +76,16 @@ module_function
 
   def greet_message(sid)
     ServerMessage.find_by(sid: sid, msg_type: "greet_message")&.content
+  end
+
+  def channel(event, channel)
+    if channel
+      channel_id = parse_channel_mention(channel)
+      return "Channel mention required" unless channel_id
+      ServerSetting.set(event.server.id, "greetmsg_channel", cid: channel_id)
+      "Greet Channel set to: #{mention_channel(channel_id)}"
+    else
+      "Greet Channel: #{mention_channel(greet_channel(event).id)}"
+    end
   end
 end
