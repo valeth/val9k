@@ -4,7 +4,7 @@ module Plugin
 
   def cmd(name, attributes)
     command(name, attributes) do |event, *args|
-      unless attributes.delete(:skip_usage_log)
+      unless attributes.fetch(:skip_usage_log, false)
         LOGGER.info do
           tmp = "Executing #{event.command.name}(#{args.join(' ')})"
           tmp += " by #{event.author.distinct} (#{event.author.id})"
