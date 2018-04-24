@@ -45,15 +45,30 @@ module YoutubeUpdate
       return if sub.notified?(notif)
       return if notif.published_at < bot.startup_timestamp
       discord_channel = bot.channel(sub.discord_channel_id)
-      server = discord_channel.server
-      role_id = Notification.role(server.id)
-      msg = role_id ? server.role(role_id).mention : ""
+      msg = notification_role(discord_channel.server) || ""
       discord_channel.send_embed(msg, embed(notif))
       sub.notified(notif)
     rescue StandardError => err
       LOGGER.error do
         "Failed to send notification for #{sub.youtube_channel}: #{err.message}"
       end
+    end
+
+    # @param server [Discordrb::Server]
+    # @return [String, nil]
+    def notification_role(server)
+      role_id = Notification.role(server.id)
+      return unless role_id
+
+      role = server.role(role_id)
+      return role.mention if role
+
+      # role is invalid, remove it
+      LOGGER.info do
+        "Removing youtube notification role for #{server.name} (#{server.id})"
+      end
+      ServerSettings.set(server.id, "youtube_update_role", role: nil)
+      nil
     end
   end
 end
