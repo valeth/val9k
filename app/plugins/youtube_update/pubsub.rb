@@ -43,7 +43,7 @@ module YoutubeUpdate
     def notify_one(bot, sub, message)
       notif = notification(sub.youtube_channel, message)
       return if sub.notified?(notif)
-      return if notif.published_at < bot.startup_timestamp
+      return if notif.published_at < bot.uptime.timestamp
       discord_channel = bot.channel(sub.discord_channel_id)
       msg = notification_role(discord_channel.server) || ""
       discord_channel.send_embed(msg, embed(notif))

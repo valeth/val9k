@@ -14,6 +14,7 @@ require "database"
 require "plugin"
 require "events"
 require "commands"
+require "uptime"
 
 Thread.abort_on_exception = (ENV["DISCORD_ENV"] == "development") || !ENV["THREAD_ABORT_ON_EXCEPTION"].nil?
 
@@ -31,13 +32,13 @@ class VAL9K < Discordrb::Commands::CommandBot
 
   attr_reader :database
   attr_reader :redis
-  attr_reader :startup_timestamp
+  attr_reader :uptime
 
   def initialize
     @config = {}
     @database = nil
     @redis = nil
-    @startup_timestamp = DateTime.now.freeze
+    @uptime = Uptime.new
 
     load_config
 
