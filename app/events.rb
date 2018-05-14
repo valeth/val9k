@@ -25,7 +25,7 @@ module Events
 
   server_delete do |event|
     LOGGER.info { "Left #{event.server.name} (#{event.server.id})" }
-    DiscordChannel.where(sid: event.server.id).destroy
+    DiscordChannel.where(sid: event.server.id).destroy_all
   end
 
   channel_create do |event|
