@@ -4,6 +4,8 @@ module Plugin
 
   def cmd(name, attributes)
     command(name, attributes) do |event, *args|
+      next if event.bot.ignored[:servers].include?(event.server.id)
+
       unless attributes.fetch(:skip_usage_log, false)
         LOGGER.info do
           tmp = "Executing #{event.command.name}(#{args.join(' ')})"

@@ -15,6 +15,7 @@ require "plugin"
 require "events"
 require "commands"
 require "uptime"
+require "set"
 
 Thread.abort_on_exception = (ENV["DISCORD_ENV"] == "development") || !ENV["THREAD_ABORT_ON_EXCEPTION"].nil?
 
@@ -33,12 +34,16 @@ class VAL9K < Discordrb::Commands::CommandBot
   attr_reader :database
   attr_reader :redis
   attr_reader :uptime
+  attr_accessor :ignored
 
   def initialize
     @config = {}
     @database = nil
     @redis = nil
     @uptime = Uptime.new
+    @ignored = {
+      servers: Set.new
+    }
 
     load_config
 

@@ -55,6 +55,27 @@ module Owner
     end
   end
 
+  cmd(
+    :ignoreserver,
+    help_available: false,
+    min_args: 1,
+    max_args: 1
+  ) do |event, sid, *_args|
+    next unless bot_owner?(event)
+
+    server = event.bot.servers[sid.to_i]
+    next "Could not find server with ID #{sid}" unless server
+    next "Cannot ignore this server" if server.id == 217081703137542145
+
+    if event.bot.ignored[:servers].include?(server.id)
+      event.bot.ignored[:servers].delete(server.id)
+      "#{server.name} (#{server.id}) is no longer ignored"
+    else
+      event.bot.ignored[:servers] << server.id
+      "#{server.name} (#{server.id}) is now ignored"
+    end
+  end
+
 module_function
 
   def bot_owner?(event)
