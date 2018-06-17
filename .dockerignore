@@ -1,3 +1,7 @@
-/Dockerfile
-/docker-compose.yml
-/.git*
+*
+!app
+!bin
+!db
+!lib
+!Gemfile*
+!Rakefile

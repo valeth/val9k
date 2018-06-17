@@ -1,19 +1,43 @@
-FROM ruby:2.4.1-slim
+# |-------<[ Build ]>-------|
 
-LABEL maintainer="Patrick Auernig <patrick.auernig@gmail.com>"
+FROM ruby:2.5-alpine AS build
 
-RUN apt-get update -qq \
- && apt-get install -qqy --no-install-recommends \
-   build-essential \
-   libpq-dev \
-   git
+RUN mkdir -p /build
+WORKDIR /build
 
-ENV APP_ROOT /app
-RUN mkdir -p $APP_ROOT
-WORKDIR $APP_ROOT
+RUN apk add --no-cache \
+    build-base \
+    libxml2-dev \
+    libxslt-dev \
+    postgresql-dev
 
 COPY Gemfile Gemfile.lock ./
-RUN bundle install
-COPY . .
+RUN bundle install --deployment --without="development test"
 
-ENTRYPOINT ["bundle", "exec", "rake"]
+
+# |-------<[ App ]>-------|
+
+FROM ruby:2.5-alpine AS app
+
+LABEL maintainer="Patrick Auernig <dev.patrick.auernig@gmail.com>"
+
+RUN apk add --no-cache \
+    tzdata \
+    postgresql-libs
+
+ARG user_uid=1000
+ARG user_gid=1000
+RUN addgroup -S -g "$user_gid" app \
+ && adduser -S -G app -u "$user_uid" app
+
+RUN mkdir -p /app && chown app:app /app
+WORKDIR /app
+USER app
+
+COPY --chown=app:app --from=build /build/vendor/bundle ./vendor/bundle
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --deployment --without="development test"
+COPY --chown=app:app ./ ./
+
+ENTRYPOINT ["bundle", "exec"]
+CMD ["bin/rake", "run"]

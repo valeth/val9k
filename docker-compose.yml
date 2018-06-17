@@ -1,23 +1,54 @@
 version: "3"
 
+volumes:
+  database:
+
+networks:
+  main:
+  youtube_updates:
+
 services:
   database:
-    image: "postgres:9.5"
+    image: "postgres:9.6-alpine"
     ports:
-      - "5432:5432"
+      - "5432"
+    networks:
+      - "main"
+    volumes:
+      - "database:/data/db"
 
   redis:
-    image: "redis:3"
+    image: "redis:4-alpine"
     ports:
-      - "6379:6379"
+      - "6379"
+    networks:
+      - "youtube_updates"
+
+  yt_nrcv:
+    image: "registry.gitlab.com/valeth/youtube-notification-receiver:latest"
+    ports:
+      - "9292"
+    networks:
+      - "youtube_updates"
+    depends_on:
+      - "redis"
 
   bot:
+    image: "registry.gitlab.com/valeth/val9k:latest"
     build:
       context: .
-    volumes:
-      - ".:/app"
+    env_file: ./.env
+    environment:
+      DISCORD_ENV: "development"
+      REDIS_URL: "redis://redis/0"
+      DATABASE_URL: "postgres://postgres@database/fraggers_development"
+      WEBSUB_URL: "http://yt_nrcv/youtube"
+    networks:
+      - "main"
+      - "youtube_updates"
     depends_on:
       - "database"
-    environment:
-      DATABASE_URL: postgres://postgres@database/fraggers_development
-      DISCORD_ENV:  development
+      - "redis"
+      - "yt_nrcv"
+    volumes:
+      - "./config:/app/config"
