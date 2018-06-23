@@ -48,6 +48,9 @@ module YoutubeUpdate
       msg = notification_role(discord_channel.server) || ""
       discord_channel.send_embed(msg, embed(notif))
       sub.notified(notif)
+      LOGGER.info do
+        "Sent nofication for #{sub.youtube_channel} to #{discord_channel.name} (#{discord_channel.id})"
+      end
     rescue StandardError => err
       LOGGER.error do
         "Failed to send notification for #{sub.youtube_channel}: #{err.message}"
