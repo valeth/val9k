@@ -11,7 +11,7 @@ services:
   database:
     image: "postgres:9.6-alpine"
     ports:
-      - "5432"
+      - "5432:5432"
     networks:
       - "main"
     volumes:
@@ -20,14 +20,14 @@ services:
   redis:
     image: "redis:4-alpine"
     ports:
-      - "6379"
+      - "6379:6379"
     networks:
       - "youtube_updates"
 
   yt_nrcv:
     image: "registry.gitlab.com/valeth/youtube-notification-receiver:latest"
     ports:
-      - "9292"
+      - "9292:9292"
     networks:
       - "youtube_updates"
     depends_on:
