@@ -4,18 +4,19 @@ require_relative "application_logger"
 
 module Events
   extend Discordrb::EventContainer
+  include Loggable
 
   ready do |event|
-    LOGGER.info { "Started at #{event.bot.uptime.timestamp}" }
+    log.info { "Started at #{event.bot.uptime.timestamp}" }
     bot = event.bot
-    LOGGER.info { "Logged in as #{bot.profile.name}" }
+    log.info { "Logged in as #{bot.profile.name}" }
     game = "#{bot.prefix}help"
-    LOGGER.info { "Setting game to #{game}" }
+    log.info { "Setting game to #{game}" }
     bot.game = game
   end
 
   server_create do |event|
-    LOGGER.info { "Joined #{event.server.name} (#{event.server.id})" }
+    log.info { "Joined #{event.server.name} (#{event.server.id})" }
     DiscordChannel.transaction do
       event.server.channels.each do |channel|
         DiscordChannel.create(sid: event.server.id, cid: channel.id)
@@ -24,12 +25,12 @@ module Events
   end
 
   server_delete do |event|
-    LOGGER.info { "Left #{event.server.name} (#{event.server.id})" }
+    log.info { "Left #{event.server.name} (#{event.server.id})" }
     DiscordChannel.where(sid: event.server.id).destroy_all
   end
 
   channel_create do |event|
-    LOGGER.info do
+    log.info do
       [
         "New", channel_type_str(event.type), "channel",
         "@", event.server.name, "(#{event.server.id})",

@@ -6,6 +6,8 @@ require "json"
 
 module YoutubeUpdate
   module Request
+    include Loggable
+
     SubscriptionFailed = Class.new(StandardError)
     WEBSUB_URL = ENV.fetch("WEBSUB_URL")
 
@@ -37,7 +39,7 @@ module YoutubeUpdate
       channels = JSON.parse(results)
       channels.map { |chan| chan.symbolize_keys }
     rescue RestClient::ExceptionWithResponse, Errno::ECONNREFUSED => e
-      LOGGER.error { "Channel search failed: #{e.message}" }
+      log.error { "Channel search failed: #{e.message}" }
       []
     end
   end

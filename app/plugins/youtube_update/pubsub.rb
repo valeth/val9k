@@ -8,6 +8,7 @@ module YoutubeUpdate
   module PubSub
     extend Discordrb::EventContainer
     extend Notification
+    include Loggable
 
     @subscriber = nil
 
@@ -20,7 +21,7 @@ module YoutubeUpdate
     # @param bot [Discordrb::Bot]
     def start_redis_subscriber(bot)
       @subscriber ||= Thread.new do
-        LOGGER.info { "Starting Redis YouTube subscriber listener..." }
+        log.info { "Starting Redis YouTube subscriber listener..." }
 
         bot.redis.subscribe("youtube_updates") do |on|
           on.message do |channel, message|
@@ -48,11 +49,11 @@ module YoutubeUpdate
       msg = notification_role(discord_channel.server) || ""
       discord_channel.send_embed(msg, embed(notif))
       sub.notified(notif)
-      LOGGER.info do
+      log.info do
         "Sent nofication for #{sub.youtube_channel} to #{discord_channel.name} (#{discord_channel.id})"
       end
     rescue StandardError => err
-      LOGGER.error do
+      log.error do
         "Failed to send notification for #{sub.youtube_channel}: #{err.message}"
       end
     end
@@ -67,7 +68,7 @@ module YoutubeUpdate
       return role.mention if role
 
       # role is invalid, remove it
-      LOGGER.info do
+      log.info do
         "Removing youtube notification role for #{server.name} (#{server.id})"
       end
       ServerSettings.set(server.id, "youtube_update_role", role: nil)

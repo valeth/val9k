@@ -6,6 +6,8 @@ require "active_record"
 require_relative "application_logger"
 
 module Database
+  include Loggable
+
   MODEL_PATH = File.expand_path("models", __dir__)
   CONFIG_FILE = File.expand_path("../config/database.yml", __dir__)
 
@@ -15,10 +17,10 @@ module_function
 
   def connect
     env = ENV["DISCORD_ENV"]&.to_sym || :development
-    LOGGER.info { "Database environment set to #{env}" }
+    log.info { "Database environment set to #{env}" }
 
     db = ActiveRecord::Base.establish_connection(env)
-    LOGGER.info { "Connected to database" }
+    log.info { "Connected to database" }
 
     load_models
     db
@@ -27,7 +29,7 @@ module_function
   def load_models
     Dir["#{MODEL_PATH}/*.rb"].each do |file|
       require file
-      LOGGER.info { "Loaded database model: #{File.basename(file, '.rb')}" }
+      log.info { "Loaded database model: #{File.basename(file, '.rb')}" }
     end
   end
 end

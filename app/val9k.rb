@@ -29,6 +29,8 @@ trap "SIGTERM" do
 end
 
 class VAL9K < Discordrb::Commands::CommandBot
+  include Loggable
+
   VERSION = "0.2.0"
 
   attr_reader :database
@@ -61,7 +63,7 @@ class VAL9K < Discordrb::Commands::CommandBot
 
   def log_exception(e)
     if e.is_a? Discordrb::Errors::NoPermission
-      LOGGER.error { "Permission Error: #{e.message}" }
+      log.error { "Permission Error: #{e.message}" }
     else
       super(e)
     end
@@ -80,7 +82,7 @@ private
     Dir["#{plugin_path}/*.rb"].each do |file|
       require file
       plugin = File.basename(file, ".rb").classify
-      LOGGER.info { "Adding plugin #{plugin}..." }
+      log.info { "Adding plugin #{plugin}..." }
       include! plugin.constantize
     end
   end

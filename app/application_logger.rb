@@ -37,6 +37,19 @@ LOGGER = Logging.logger.root
 LOGGER.level = :debug
 LOGGER.appenders = :stdout
 
+module Loggable
+  class << self
+    def included(mod)
+      mod.define_singleton_method(:log) { Logging.logger[mod.name] }
+      mod.define_method(:log) { Logging.logger[mod.name] }
+    end
+
+    def extended(mod)
+      included(mod)
+    end
+  end
+end
+
 class DiscordLogger < Discordrb::Logger
   def initialize
     super
@@ -54,4 +67,3 @@ end
 silence_warnings do
   Discordrb::LOGGER = DiscordLogger.new
 end
-

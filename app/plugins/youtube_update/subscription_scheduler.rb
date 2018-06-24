@@ -7,6 +7,8 @@ require "thread"
 
 module YoutubeUpdate
   module SubscriptionScheduler
+    include Loggable
+
     INTERVAL = 2.days.freeze
     @scheduler = Rufus::Scheduler.new
     @subscriber_queue = Queue.new
@@ -19,7 +21,7 @@ module YoutubeUpdate
         multiplier: 7,
         on: Request::SubscriptionFailed,
         on_retry: proc do |err, try, _elapsed, next_interval|
-          LOGGER.error do
+          log.error do
             "try #{try}/#{@tries}: #{err.message}" +
             (", retrying in #{next_interval.round(2)} seconds" if next_interval).to_s
           end
@@ -28,7 +30,7 @@ module YoutubeUpdate
     end
 
     def @scheduler.on_error(job, exception)
-      LOGGER.error { exception.message }
+      log.error { exception.message }
     end
 
   module_function
@@ -41,10 +43,10 @@ module YoutubeUpdate
           begin
             Retriable.with_context(:ytsub) do
               chan = Request.subscribe(channel_id, INTERVAL)
-              LOGGER.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
+              log.info { "Updated subscription for #{chan}, next update: #{chan.next_update}" }
             end
           rescue Request::SubscriptionFailed
-            LOGGER.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
+            log.error { "Failed subscribing #{channel_id} after #{@tries} tries, will try again in #{INTERVAL.inspect}." }
           end
         end
       end
@@ -65,7 +67,7 @@ module YoutubeUpdate
         # add 10 seconds padding, so the scheduler doesn't complain about starting jobs in the past
         next_update = chan.next_update <= DateTime.now ? Time.now + 10 : chan.next_update
 
-        LOGGER.info { "Scheduling #{chan} for resubscription every #{INTERVAL.inspect}, first at #{next_update}" }
+        log.info { "Scheduling #{chan} for resubscription every #{INTERVAL.inspect}, first at #{next_update}" }
 
         @scheduler.every("#{INTERVAL.to_i}s", first_at: next_update, tag: channel_id) do
           @subscriber_queue.enq(channel_id)
@@ -79,7 +81,7 @@ module YoutubeUpdate
     def unschedule(chan)
       return unless chan && scheduled?(chan)
 
-      LOGGER.info { "Unscheduling #{chan.name} (#{chan.channel_id}) from resubscription..." }
+      log.info { "Unscheduling #{chan.name} (#{chan.channel_id}) from resubscription..." }
 
       job, _ = @scheduler.jobs(tag: chan.channel_id)
       @schedulers.unschedule(job) if job
@@ -93,7 +95,7 @@ module YoutubeUpdate
     end
 
     Thread.new do
-      LOGGER.info { "Starting YouTube subscription scheduler..." }
+      log.info { "Starting YouTube subscription scheduler..." }
       @subscriber_threads = 3.times.map { subscriber_thread }
       YoutubeChannel.all.each { |chan| schedule(chan.channel_id) }
     end
