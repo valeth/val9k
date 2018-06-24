@@ -31,12 +31,6 @@ module YoutubeUpdate
       LOGGER.error { exception.message }
     end
 
-    Thread.new do
-      LOGGER.info { "Starting YouTube subscription scheduler..." }
-      @subscriber_threads = 3.times.map { subscriber_thread }
-      YoutubeChannel.all.each { |chan| schedule(chan.channel_id) }
-    end
-
   module_function
 
     def subscriber_thread
@@ -96,6 +90,12 @@ module YoutubeUpdate
     def scheduled?(channel_id)
       job, _ = @scheduler.jobs(tag: channel_id)
       job.nil? ? false : @scheduler.scheduled?(job)
+    end
+
+    Thread.new do
+      LOGGER.info { "Starting YouTube subscription scheduler..." }
+      @subscriber_threads = 3.times.map { subscriber_thread }
+      YoutubeChannel.all.each { |chan| schedule(chan.channel_id) }
     end
   end
 end
