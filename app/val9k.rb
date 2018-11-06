@@ -31,7 +31,7 @@ end
 class VAL9K < Discordrb::Commands::CommandBot
   include Loggable
 
-  VERSION = "0.2.0"
+  VERSION = "0.3.0"
 
   attr_reader :database
   attr_reader :redis
