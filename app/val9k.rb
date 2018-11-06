@@ -31,7 +31,7 @@ end
 class VAL9K < Discordrb::Commands::CommandBot
   include Loggable
 
-  VERSION = "0.3.0"
+  VERSION = "0.3.1"
 
   attr_reader :database
   attr_reader :redis
@@ -52,6 +52,7 @@ class VAL9K < Discordrb::Commands::CommandBot
     super(@config)
     at_exit { stop }
 
+    initialize_ignores
     initialize_database
     initialize_redis
 
@@ -93,5 +94,11 @@ private
 
   def initialize_redis
     @redis = Redis.new
+  end
+
+  def initialize_ignores
+    @ignored[:servers] += ENV.fetch("VAL9K_SERVER_IGNORES", []).chomp.split(",").map(&:to_i)
+    log.info { "Ignoring #{@ignored[:servers].size} servers" }
+    # @ignored[:users] += ENV.fetch("VAL9K_USER_IGNORES", []).chomp.split(",").map(&:to_i)
   end
 end
